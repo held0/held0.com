@@ -22,9 +22,6 @@ export default function Footer() {
               {currentYear} Niklas Held
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-xs text-[#737373] sm:justify-start">
-              <Link href="/kontakt" className="transition-colors hover:text-[#e5e5e5]">
-                Kontakt
-              </Link>
               <Link href="/impressum" className="transition-colors hover:text-[#e5e5e5]">
                 Impressum
               </Link>

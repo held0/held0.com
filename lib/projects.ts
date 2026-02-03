@@ -10,11 +10,11 @@ export const projects: Project[] = [
     external: true,
   },
   {
-    title: "offenesprechstunde.de",
+    title: "offenesprechstunden.de",
     description:
       "Plattform zur Suche von Ärzten mit offenen Sprechstunden. Einfach Arzt finden ohne Termin.",
     tags: ["Rails 8", "Hotwire", "PostgreSQL", "Tailwind"],
-    href: "https://offenesprechstunde.de",
+    href: "https://offenesprechstunden.de",
     external: true,
   },
   {

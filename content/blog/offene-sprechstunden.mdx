@@ -1,0 +1,133 @@
+---
+title: "Offene Sprechstunden - Von der Idee zur App"
+description: "Wie ich eine App entwickelt habe, die Arztbesuche ohne Termin ermöglicht."
+date: "2024-02-20"
+---
+
+Jeder kennt das Problem: Man ist krank, braucht einen Arzt, aber der nächste freie Termin ist in drei Wochen. Dabei bieten viele Ärzte **offene Sprechstunden** an - nur weiß niemand davon.
+
+## Das Problem
+
+Offene Sprechstunden sind Zeiten, in denen Ärzte Patienten ohne Termin behandeln. Aber:
+
+- Die Information ist verstreut (Websites, Aushänge, Telefonansagen)
+- Öffnungszeiten ändern sich häufig
+- Es gibt keine zentrale Übersicht
+
+## Die Lösung
+
+Eine App, die alle offenen Sprechstunden in der Nähe anzeigt. Einfach, aber effektiv.
+
+## Tech-Stack
+
+```typescript
+const techStack = {
+  app: "React Native",
+  backend: "Firebase",
+  database: "Firestore",
+  auth: "Firebase Auth",
+  maps: "Google Maps API",
+};
+```
+
+React Native war die logische Wahl - eine Codebase für iOS und Android. Firebase ermöglichte einen schnellen Start ohne eigene Server-Infrastruktur.
+
+## Architektur
+
+Die App folgt einem einfachen Prinzip:
+
+```typescript
+// Datenmodell für einen Arzt
+interface Doctor {
+  id: string;
+  name: string;
+  specialty: string;
+  location: GeoPoint;
+  openHours: OpenHour[];
+}
+
+interface OpenHour {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  notes?: string;
+}
+```
+
+Die Suche nutzt GeoQueries von Firestore:
+
+```typescript
+async function findNearbyDoctors(location: GeoPoint, radiusKm: number) {
+  const bounds = geohashQueryBounds(
+    [location.latitude, location.longitude],
+    radiusKm * 1000
+  );
+
+  const promises = bounds.map(([start, end]) =>
+    firestore
+      .collection("doctors")
+      .orderBy("geohash")
+      .startAt(start)
+      .endAt(end)
+      .get()
+  );
+
+  const snapshots = await Promise.all(promises);
+  return snapshots.flatMap((snap) => snap.docs.map((doc) => doc.data()));
+}
+```
+
+## Herausforderungen
+
+### Datenqualität
+
+Das größte Problem: Woher kommen die Daten? Meine Strategie:
+
+1. **Initial**: Manuelle Recherche für die größten Städte
+2. **Crowdsourcing**: Nutzer können Ärzte hinzufügen und aktualisieren
+3. **Verification**: Änderungen werden vor Veröffentlichung geprüft
+
+### Offline-Funktionalität
+
+Wer krank ist, hat vielleicht kein stabiles Internet. Daher:
+
+```typescript
+// Lokales Caching mit AsyncStorage
+async function getDoctorsWithCache(location: GeoPoint) {
+  const cacheKey = `doctors_${location.latitude}_${location.longitude}`;
+  const cached = await AsyncStorage.getItem(cacheKey);
+
+  if (cached && !isExpired(cached)) {
+    return JSON.parse(cached);
+  }
+
+  const fresh = await fetchFromFirestore(location);
+  await AsyncStorage.setItem(
+    cacheKey,
+    JSON.stringify({
+      data: fresh,
+      timestamp: Date.now(),
+    })
+  );
+
+  return fresh;
+}
+```
+
+## Learnings
+
+1. **Simplicity wins** - Die App macht genau eine Sache gut
+2. **Daten sind alles** - Ohne gute Daten ist die beste App nutzlos
+3. **Feedback-Loop** - Nutzer-Feedback von Anfang an einbauen
+
+## Was kommt als nächstes?
+
+Die App hat mittlerweile tausende Nutzer. Geplant sind:
+
+- Push-Benachrichtigungen bei geänderten Sprechzeiten
+- Integration mit Krankenversicherungs-Apps
+- Wartezeit-Schätzungen basierend auf Erfahrungswerten
+
+---
+
+Du hast eine Idee für ein Feature? [Schreib mir](mailto:hello@held0.com)!

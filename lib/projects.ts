@@ -1,0 +1,36 @@
+import { Project } from "@/components/ProjectCard";
+
+export const projects: Project[] = [
+  {
+    title: "imposter-online.com",
+    description:
+      "Ein Online-Multiplayer-Spiel inspiriert von Among Us. Spielbar direkt im Browser ohne Download.",
+    tags: ["React", "Node.js", "Socket.io", "TypeScript"],
+    href: "https://imposter-online.com",
+    external: true,
+  },
+  {
+    title: "Offene Sprechstunden",
+    description:
+      "Mobile App zur Verwaltung von Arzt-Terminen und offenen Sprechstunden. Verfügbar für iOS und Android.",
+    tags: ["React Native", "Firebase", "TypeScript"],
+    href: "https://offene-sprechstunden.de",
+    external: true,
+  },
+  {
+    title: "held0.com",
+    description:
+      "Diese Portfolio-Website. Minimalistisches Design mit Developer-Vibe. Open Source auf GitHub.",
+    tags: ["Next.js", "Tailwind CSS", "MDX"],
+    href: "https://github.com/niklasheld/held0.com",
+    external: true,
+  },
+];
+
+export function getFeaturedProjects(count: number = 3): Project[] {
+  return projects.slice(0, count);
+}
+
+export function getAllProjects(): Project[] {
+  return projects;
+}

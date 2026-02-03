@@ -34,8 +34,8 @@ export default function DatenschutzPage() {
                   <p>35410 Hungen</p>
                   <p>
                     E-Mail:{" "}
-                    <a href="mailto:hello@held0.com" className="text-[#22d3ee] hover:underline">
-                      hello@held0.com
+                    <a href="mailto:webmaster@held0.com" className="text-[#22d3ee] hover:underline">
+                      webmaster@held0.com
                     </a>
                   </p>
                 </div>

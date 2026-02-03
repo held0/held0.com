@@ -6,7 +6,7 @@ interface SocialLinksProps {
 const socialLinks = [
   {
     name: "GitHub",
-    href: "https://github.com/niklasheld",
+    href: "https://github.com/held0",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -20,7 +20,7 @@ const socialLinks = [
   },
   {
     name: "LinkedIn",
-    href: "https://linkedin.com/in/niklasheld",
+    href: "https://www.linkedin.com/in/niklas-held/",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -33,22 +33,8 @@ const socialLinks = [
     ),
   },
   {
-    name: "Twitter",
-    href: "https://twitter.com/niklasheld_",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className="h-5 w-5"
-      >
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-    ),
-  },
-  {
     name: "E-Mail",
-    href: "mailto:hello@held0.com",
+    href: "mailto:webmaster@held0.de",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"

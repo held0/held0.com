@@ -1,0 +1,92 @@
+---
+title: "Wie ich imposter-online.com gebaut habe"
+description: "Ein Blick hinter die Kulissen: Von der Idee zum fertigen Multiplayer-Spiel im Browser."
+date: "2024-01-15"
+---
+
+Manchmal entstehen die besten Projekte aus einer spontanen Idee. Bei **imposter-online.com** war es genau so - ein Abend, an dem ich Among Us spielte und dachte: "Das muss doch auch im Browser gehen."
+
+## Die Idee
+
+Among Us war 2020 das Spiel schlechthin. Aber nicht jeder hatte Lust, extra eine App zu installieren. Die Idee war simpel: Ein Browser-basiertes Multiplayer-Spiel mit ähnlicher Mechanik.
+
+## Der Tech-Stack
+
+Nach einiger Recherche entschied ich mich für:
+
+```typescript
+// Frontend
+const frontend = {
+  framework: "React",
+  state: "Zustand",
+  graphics: "Canvas API",
+  styling: "Tailwind CSS",
+};
+
+// Backend
+const backend = {
+  runtime: "Node.js",
+  realtime: "Socket.io",
+  database: "Redis",
+};
+```
+
+Die Wahl von **Socket.io** für die Echtzeit-Kommunikation war entscheidend. Bei einem Multiplayer-Spiel muss jede Aktion sofort bei allen Spielern ankommen.
+
+## Herausforderungen
+
+### 1. Synchronisation
+
+Das größte Problem bei Multiplayer-Spielen: Alle Spieler müssen den gleichen Spielstand sehen. Meine Lösung war ein autoritativer Server:
+
+```typescript
+// Der Server ist die einzige Quelle der Wahrheit
+class GameServer {
+  private gameState: GameState;
+
+  handlePlayerMove(playerId: string, position: Position) {
+    // Validierung auf dem Server
+    if (this.isValidMove(playerId, position)) {
+      this.gameState.updatePlayer(playerId, position);
+      this.broadcastState();
+    }
+  }
+}
+```
+
+### 2. Latenz
+
+Bei einem Spiel, das weltweit gespielt wird, ist Latenz unvermeidlich. Client-side prediction half dabei:
+
+```typescript
+// Bewegung sofort anzeigen, später korrigieren
+function movePlayer(direction: Direction) {
+  // Sofortige lokale Anzeige
+  predictedPosition = calculateNewPosition(direction);
+  renderPlayer(predictedPosition);
+
+  // Server informieren
+  socket.emit("move", direction);
+}
+
+// Korrektur bei Server-Antwort
+socket.on("state", (serverState) => {
+  if (serverState.position !== predictedPosition) {
+    smoothCorrection(serverState.position);
+  }
+});
+```
+
+## Learnings
+
+Nach mehreren Monaten Entwicklung habe ich einiges gelernt:
+
+1. **Echtzeit ist komplex** - Multiplayer-Spiele sind technisch anspruchsvoller als gedacht
+2. **Cheater gibt es überall** - Server-seitige Validierung ist Pflicht
+3. **UX ist King** - Ein schönes Spiel mit schlechter UX wird nicht gespielt
+
+## Fazit
+
+Das Projekt hat mir gezeigt, wie viel Spaß es macht, etwas zu bauen, das Menschen zusammenbringt. Tausende Spieler haben mittlerweile ihre Runden gespielt - und das macht alle späten Nächte wett.
+
+Hast du Fragen zum Projekt? Schreib mir gerne eine [E-Mail](mailto:hello@held0.com)!

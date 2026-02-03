@@ -1,0 +1,31 @@
+service: held0-portfolio
+image: held0/held0-portfolio
+
+servers:
+  web:
+    hosts:
+      - 91.99.196.182
+
+proxy:
+  ssl: true
+  hosts:
+    - held0.com
+    - www.held0.com
+  app_port: 3000
+
+registry:
+  server: ghcr.io
+  username: held0
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  clear:
+    NODE_ENV: production
+
+builder:
+  arch: amd64
+  remote: ssh://deploy@91.99.196.182
+
+ssh:
+  user: deploy

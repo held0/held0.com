@@ -13,7 +13,7 @@ export const projects: Project[] = [
     title: "offenesprechstunden.de",
     description:
       "Plattform zur Suche von Ärzten mit offenen Sprechstunden. Einfach Arzt finden ohne Termin.",
-    tags: ["Rails 8", "Hotwire", "PostgreSQL", "Tailwind CSS", "Flowbite", "Kamal"],
+    tags: ["Rails 8", "Hotwire", "PostgreSQL", "Tailwind CSS", "Flowbite"],
     href: "https://offenesprechstunden.de",
     external: true,
   },
@@ -21,7 +21,7 @@ export const projects: Project[] = [
     title: "held0.com",
     description:
       "Diese Portfolio-Website. Minimalistisches Design mit Developer-Vibe. Open Source auf GitHub.",
-    tags: ["Next.js", "TypeScript", "Tailwind CSS", "Kamal"],
+    tags: ["Next.js", "TypeScript", "Tailwind CSS"],
     href: "https://github.com/held0/held0.com",
     external: true,
   },

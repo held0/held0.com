@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/projekte", label: "Projekte" },
-  { href: "/blog", label: "Blog" },
   { href: "/ueber", label: "Über" },
 ];
 
@@ -21,7 +20,7 @@ export default function Header() {
           className="font-mono text-lg font-semibold text-[#e5e5e5] transition-colors hover:text-[#22d3ee]"
         >
           <span className="text-[#22d3ee]">{"<"}</span>
-          niklas
+          held0
           <span className="text-[#22d3ee]">{" />"}</span>
         </Link>
 

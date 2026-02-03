@@ -30,9 +30,15 @@ export default function ImpressumPage() {
             <div className="mt-4 space-y-1">
               <p>
                 E-Mail:{" "}
-                <a href="mailto:hello@held0.com" className="text-[#22d3ee] hover:underline">
-                  hello@held0.com
+                <a href="mailto:webmaster@held0.com" className="text-[#22d3ee] hover:underline">
+                  webmaster@held0.com
                 </a>
+              </p>
+              <p>
+                Formular:{" "}
+                <Link href="/kontakt" className="text-[#22d3ee] hover:underline">
+                  Kontaktformular
+                </Link>
               </p>
             </div>
           </div>

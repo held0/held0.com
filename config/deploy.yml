@@ -22,6 +22,12 @@ registry:
 env:
   clear:
     NODE_ENV: production
+  secret:
+    - SMTP_HOST
+    - SMTP_PORT
+    - SMTP_USER
+    - SMTP_PASS
+    - CONTACT_EMAIL
 
 builder:
   arch: amd64

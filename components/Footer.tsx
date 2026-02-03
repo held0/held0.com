@@ -1,8 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import SocialLinks from "./SocialLinks";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+
+  const openCookieSettings = () => {
+    if (typeof window !== "undefined" && window.CookieConsent) {
+      window.CookieConsent.showPreferences();
+    }
+  };
 
   return (
     <footer className="border-t border-[#1a1a1a] bg-[#0f0f0f]">
@@ -20,6 +28,12 @@ export default function Footer() {
               <Link href="/datenschutz" className="transition-colors hover:text-[#e5e5e5]">
                 Datenschutz
               </Link>
+              <button
+                onClick={openCookieSettings}
+                className="transition-colors hover:text-[#e5e5e5]"
+              >
+                Cookie-Einstellungen
+              </button>
             </div>
           </div>
 

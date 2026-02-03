@@ -5,7 +5,7 @@ export const projects: Project[] = [
     title: "imposter-online.com",
     description:
       "Ein Online-Multiplayer-Spiel inspiriert von Among Us. Spielbar direkt im Browser ohne Download.",
-    tags: ["Next.js", "Zustand", "Framer Motion", "TypeScript"],
+    tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "next-intl"],
     href: "https://imposter-online.com",
     external: true,
   },
@@ -13,7 +13,7 @@ export const projects: Project[] = [
     title: "offenesprechstunden.de",
     description:
       "Plattform zur Suche von Ärzten mit offenen Sprechstunden. Einfach Arzt finden ohne Termin.",
-    tags: ["Rails 8", "Hotwire", "PostgreSQL", "Tailwind"],
+    tags: ["Rails 8", "Hotwire", "PostgreSQL", "Tailwind CSS", "Flowbite", "Kamal"],
     href: "https://offenesprechstunden.de",
     external: true,
   },
@@ -21,7 +21,7 @@ export const projects: Project[] = [
     title: "held0.com",
     description:
       "Diese Portfolio-Website. Minimalistisches Design mit Developer-Vibe. Open Source auf GitHub.",
-    tags: ["Next.js", "TypeScript", "Tailwind CSS", "MDX"],
+    tags: ["Next.js", "TypeScript", "Tailwind CSS", "Kamal"],
     href: "https://github.com/held0/held0.com",
     external: true,
   },

@@ -1,8 +1,10 @@
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Impressum",
-  description: "Impressum und Angaben gemäß § 5 TMG.",
+  description: "Impressum von Niklas Held.",
+  robots: { index: false, follow: true },
 };
 
 export default function ImpressumPage() {
@@ -14,13 +16,11 @@ export default function ImpressumPage() {
 
         <div className="mt-8 space-y-8 text-[#a3a3a3]">
           <div>
-            <h2 className="font-mono text-lg font-semibold text-[#e5e5e5]">
-              Angaben gemäß § 5 TMG
-            </h2>
+            <h2 className="font-mono text-lg font-semibold text-[#e5e5e5]">Anbieter</h2>
             <div className="mt-4 space-y-1">
               <p>Niklas Held</p>
-              <p>[Straße und Hausnummer]</p>
-              <p>[PLZ und Ort]</p>
+              <p>Gabelsbergerstr. 23</p>
+              <p>50674 Köln</p>
               <p>Deutschland</p>
             </div>
           </div>
@@ -38,17 +38,6 @@ export default function ImpressumPage() {
           </div>
 
           <div>
-            <h2 className="font-mono text-lg font-semibold text-[#e5e5e5]">
-              Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV
-            </h2>
-            <div className="mt-4 space-y-1">
-              <p>Niklas Held</p>
-              <p>[Straße und Hausnummer]</p>
-              <p>[PLZ und Ort]</p>
-            </div>
-          </div>
-
-          <div>
             <h2 className="font-mono text-lg font-semibold text-[#e5e5e5]">Haftungsausschluss</h2>
 
             <div className="mt-4 space-y-4">
@@ -57,9 +46,9 @@ export default function ImpressumPage() {
                 <p className="mt-2">
                   Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die
                   Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine
-                  Gewähr übernehmen. Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene
+                  Gewähr übernehmen. Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene
                   Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8
-                  bis 10 TMG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte
+                  bis 10 DDG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte
                   oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu
                   forschen, die auf eine rechtswidrige Tätigkeit hinweisen.
                 </p>
@@ -85,6 +74,16 @@ export default function ImpressumPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          <div>
+            <h2 className="font-mono text-lg font-semibold text-[#e5e5e5]">Datenschutz</h2>
+            <p className="mt-4">
+              Unsere Datenschutzerklärung finden Sie unter:{" "}
+              <Link href="/datenschutz" className="text-[#22d3ee] hover:underline">
+                Datenschutz
+              </Link>
+            </p>
           </div>
         </div>
       </section>

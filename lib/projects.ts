@@ -5,24 +5,24 @@ export const projects: Project[] = [
     title: "imposter-online.com",
     description:
       "Ein Online-Multiplayer-Spiel inspiriert von Among Us. Spielbar direkt im Browser ohne Download.",
-    tags: ["React", "Node.js", "Socket.io", "TypeScript"],
+    tags: ["Next.js", "Zustand", "Framer Motion", "TypeScript"],
     href: "https://imposter-online.com",
     external: true,
   },
   {
-    title: "Offene Sprechstunden",
+    title: "offenesprechstunde.de",
     description:
-      "Mobile App zur Verwaltung von Arzt-Terminen und offenen Sprechstunden. Verfügbar für iOS und Android.",
-    tags: ["React Native", "Firebase", "TypeScript"],
-    href: "https://offene-sprechstunden.de",
+      "Plattform zur Suche von Ärzten mit offenen Sprechstunden. Einfach Arzt finden ohne Termin.",
+    tags: ["Rails 8", "Hotwire", "PostgreSQL", "Tailwind"],
+    href: "https://offenesprechstunde.de",
     external: true,
   },
   {
     title: "held0.com",
     description:
       "Diese Portfolio-Website. Minimalistisches Design mit Developer-Vibe. Open Source auf GitHub.",
-    tags: ["Next.js", "Tailwind CSS", "MDX"],
-    href: "https://github.com/niklasheld/held0.com",
+    tags: ["Next.js", "TypeScript", "Tailwind CSS", "MDX"],
+    href: "https://github.com/held0/held0.com",
     external: true,
   },
 ];

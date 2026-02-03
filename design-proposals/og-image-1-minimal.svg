@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0f0f0f"/>
+
+  <!-- Accent line top -->
+  <rect x="0" y="0" width="1200" height="4" fill="#22d3ee"/>
+
+  <!-- Content -->
+  <text x="100" y="220" font-family="JetBrains Mono, monospace" font-size="24" fill="#22d3ee">// hallo, ich bin</text>
+  <text x="100" y="300" font-family="Inter, sans-serif" font-size="72" font-weight="bold" fill="#e5e5e5">Niklas Held</text>
+  <text x="100" y="370" font-family="Inter, sans-serif" font-size="32" fill="#737373">Software Developer</text>
+
+  <!-- Domain -->
+  <text x="1100" y="580" font-family="JetBrains Mono, monospace" font-size="24" fill="#737373" text-anchor="end">held0.com</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0f0f0f"/>
+
+  <!-- Window chrome -->
+  <rect x="60" y="60" width="1080" height="510" rx="12" fill="#1a1a1a"/>
+
+  <!-- Traffic lights -->
+  <circle cx="100" cy="95" r="8" fill="#ff5f57"/>
+  <circle cx="130" cy="95" r="8" fill="#febc2e"/>
+  <circle cx="160" cy="95" r="8" fill="#28c840"/>
+
+  <!-- Title bar -->
+  <text x="600" y="100" font-family="JetBrains Mono, monospace" font-size="14" fill="#737373" text-anchor="middle">Terminal — held0.com</text>
+
+  <!-- Terminal content -->
+  <text x="100" y="180" font-family="JetBrains Mono, monospace" font-size="22" fill="#22d3ee">$</text>
+  <text x="130" y="180" font-family="JetBrains Mono, monospace" font-size="22" fill="#e5e5e5"> whoami</text>
+
+  <text x="100" y="230" font-family="JetBrains Mono, monospace" font-size="28" fill="#e5e5e5">Niklas Held</text>
+
+  <text x="100" y="290" font-family="JetBrains Mono, monospace" font-size="22" fill="#22d3ee">$</text>
+  <text x="130" y="290" font-family="JetBrains Mono, monospace" font-size="22" fill="#e5e5e5"> cat about.txt</text>
+
+  <text x="100" y="340" font-family="JetBrains Mono, monospace" font-size="20" fill="#737373">Software Developer aus Deutschland</text>
+  <text x="100" y="375" font-family="JetBrains Mono, monospace" font-size="20" fill="#737373">Web-Apps &amp; Mobile Anwendungen</text>
+
+  <text x="100" y="435" font-family="JetBrains Mono, monospace" font-size="22" fill="#22d3ee">$</text>
+  <text x="130" y="435" font-family="JetBrains Mono, monospace" font-size="22" fill="#e5e5e5"> open https://held0.com</text>
+
+  <!-- Blinking cursor -->
+  <rect x="100" y="470" width="14" height="26" fill="#22d3ee"/>
+</svg>

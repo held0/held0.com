@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0f0f0f"/>
+
+  <!-- Window chrome -->
+  <rect x="60" y="60" width="1080" height="510" rx="12" fill="#1a1a1a"/>
+
+  <!-- Traffic lights -->
+  <circle cx="100" cy="95" r="8" fill="#ff5f57"/>
+  <circle cx="130" cy="95" r="8" fill="#febc2e"/>
+  <circle cx="160" cy="95" r="8" fill="#28c840"/>
+
+  <!-- Tab -->
+  <rect x="200" y="75" width="160" height="40" rx="6" fill="#0f0f0f"/>
+  <text x="280" y="102" font-family="JetBrains Mono, monospace" font-size="14" fill="#e5e5e5" text-anchor="middle">held0.com</text>
+
+  <!-- Code content -->
+  <text x="100" y="180" font-family="JetBrains Mono, monospace" font-size="18" fill="#676e95">1</text>
+  <text x="140" y="180" font-family="JetBrains Mono, monospace" font-size="18" fill="#676e95">// Software Developer</text>
+
+  <text x="100" y="220" font-family="JetBrains Mono, monospace" font-size="18" fill="#676e95">2</text>
+  <text x="140" y="220" font-family="JetBrains Mono, monospace" font-size="18" fill="#c792ea">const</text>
+  <text x="210" y="220" font-family="JetBrains Mono, monospace" font-size="18" fill="#82aaff"> developer</text>
+  <text x="340" y="220" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5"> = {</text>
+
+  <text x="100" y="260" font-family="JetBrains Mono, monospace" font-size="18" fill="#676e95">3</text>
+  <text x="140" y="260" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5">  name:</text>
+  <text x="250" y="260" font-family="JetBrains Mono, monospace" font-size="18" fill="#c3e88d"> "Niklas Held"</text>
+  <text x="455" y="260" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5">,</text>
+
+  <text x="100" y="300" font-family="JetBrains Mono, monospace" font-size="18" fill="#676e95">4</text>
+  <text x="140" y="300" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5">  location:</text>
+  <text x="290" y="300" font-family="JetBrains Mono, monospace" font-size="18" fill="#c3e88d"> "Germany"</text>
+  <text x="430" y="300" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5">,</text>
+
+  <text x="100" y="340" font-family="JetBrains Mono, monospace" font-size="18" fill="#676e95">5</text>
+  <text x="140" y="340" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5">  skills: [</text>
+  <text x="280" y="340" font-family="JetBrains Mono, monospace" font-size="18" fill="#c3e88d">"React"</text>
+  <text x="375" y="340" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5">,</text>
+  <text x="395" y="340" font-family="JetBrains Mono, monospace" font-size="18" fill="#c3e88d">"Next.js"</text>
+  <text x="510" y="340" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5">,</text>
+  <text x="530" y="340" font-family="JetBrains Mono, monospace" font-size="18" fill="#c3e88d">"TypeScript"</text>
+  <text x="680" y="340" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5">]</text>
+
+  <text x="100" y="380" font-family="JetBrains Mono, monospace" font-size="18" fill="#676e95">6</text>
+  <text x="140" y="380" font-family="JetBrains Mono, monospace" font-size="18" fill="#e5e5e5">};</text>
+
+  <!-- Cursor -->
+  <rect x="170" y="400" width="12" height="24" fill="#22d3ee"/>
+</svg>

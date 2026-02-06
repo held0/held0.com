@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "title": "Niklas Held - Software Developer",
+    "titleTemplate": "%s | Niklas Held",
+    "description": "Software Developer aus Deutschland. Ich baue Web-Apps und mobile Anwendungen mit modernen Technologien."
+  },
+  "nav": {
+    "home": "Home",
+    "projects": "Projekte",
+    "about": "Über"
+  },
+  "home": {
+    "greeting": "// hallo, ich bin",
+    "tagline": "Builder aus Deutschland",
+    "projectsHeading": "// projekte",
+    "viewAll": "Alle Projekte ansehen"
+  },
+  "projects": {
+    "title": "Projekte",
+    "metaDescription": "Eine Übersicht meiner Projekte und Open-Source-Arbeiten.",
+    "heading": "// projekte",
+    "pageTitle": "Meine Projekte",
+    "description": "Eine Sammlung meiner Projekte, an denen ich gearbeitet habe. Von Web-Apps bis hin zu mobilen Anwendungen."
+  },
+  "projectDescriptions": {
+    "imposter-online": "Ein Online-Multiplayer-Spiel inspiriert von Among Us. Spielbar direkt im Browser ohne Download.",
+    "offenesprechstunden": "Plattform zur Suche von Ärzten mit offenen Sprechstunden. Einfach Arzt finden ohne Termin.",
+    "held0": "Diese Portfolio-Website. Minimalistisches Design mit Developer-Vibe. Open Source auf GitHub."
+  },
+  "about": {
+    "title": "Über mich",
+    "metaDescription": "Erfahre mehr über mich, meine Arbeit und meine Interessen.",
+    "heading": "// über mich",
+    "bio1": "Jahrelang als Softwareentwickler PHP, Symfony und Vue geschrieben. Dann gekündigt, weil die Zukunft woanders passiert. Jetzt hacke ich mich mit AI-Tools durch alles, was mir in den Sinn kommt — schneller und kreativer als je zuvor.",
+    "bio2": "Mein Stack ändert sich wöchentlich. Das Einzige, was bleibt: der Drang, Dinge zu bauen.",
+    "skillsHeading": "// skills",
+    "contactHeading": "// kontakt",
+    "contactText": "Hast du eine Frage oder möchtest an einem Projekt zusammenarbeiten? Schreib mir gerne eine E-Mail oder kontaktiere mich über Social Media."
+  },
+  "contact": {
+    "title": "Kontakt",
+    "metaDescription": "Kontaktieren Sie mich für Fragen oder Projektanfragen.",
+    "heading": "// kontakt",
+    "pageTitle": "Kontakt",
+    "description": "Haben Sie Fragen oder ein Projekt? Schreiben Sie mir!",
+    "successTitle": "Nachricht gesendet!",
+    "successMessage": "Vielen Dank für Ihre Nachricht. Ich werde mich so schnell wie möglich bei Ihnen melden.",
+    "sendAnother": "Weitere Nachricht senden",
+    "nameLabel": "Name",
+    "emailLabel": "E-Mail",
+    "subjectLabel": "Betreff",
+    "messageLabel": "Nachricht",
+    "namePlaceholder": "Ihr Name",
+    "emailPlaceholder": "ihre@email.de",
+    "subjectPlaceholder": "Worum geht es?",
+    "messagePlaceholder": "Ihre Nachricht...",
+    "requiredFields": "Pflichtfelder. Mit dem Absenden erklären Sie sich mit der Verarbeitung Ihrer Daten gemäß unserer",
+    "privacyPolicy": "Datenschutzerklärung",
+    "requiredFieldsEnd": "einverstanden.",
+    "sending": "Wird gesendet...",
+    "send": "Nachricht senden",
+    "errorGeneric": "Ein Fehler ist aufgetreten.",
+    "errorRetry": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+  },
+  "blog": {
+    "title": "Blog",
+    "metaDescription": "Gedanken über Software-Entwicklung, Projekte und Technologie.",
+    "heading": "// blog",
+    "description": "Gedanken über Software-Entwicklung, Projekte und alles, was mich interessiert.",
+    "emptyState": "Noch keine Blog-Posts vorhanden",
+    "emptyStateHint": "Schau bald wieder vorbei!",
+    "read": "Lesen",
+    "readingTime": "{minutes} Min. Lesezeit",
+    "backToBlog": "Zurück zum Blog",
+    "notFound": "Post nicht gefunden"
+  },
+  "impressum": {
+    "title": "Impressum",
+    "metaDescription": "Impressum von Niklas Held."
+  },
+  "datenschutz": {
+    "title": "Datenschutzerklärung",
+    "metaDescription": "Datenschutzerklärung gemäß DSGVO."
+  },
+  "legalDisclaimer": "Diese Seite ist nur auf Deutsch verfügbar, da sie den gesetzlichen Anforderungen in Deutschland entsprechen muss.",
+  "footer": {
+    "impressum": "Impressum",
+    "datenschutz": "Datenschutz",
+    "cookieSettings": "Cookie-Einstellungen"
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "description": "Die Seite, die du suchst, existiert nicht oder wurde verschoben.",
+    "backHome": "Zurück zur Startseite"
+  }
+}

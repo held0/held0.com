@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 export interface BlogPost {
   slug: string;
@@ -10,17 +11,21 @@ export interface BlogPost {
 
 interface BlogPostPreviewProps {
   post: BlogPost;
+  locale: string;
 }
 
-export default function BlogPostPreview({ post }: BlogPostPreviewProps) {
+export default function BlogPostPreview({ post, locale }: BlogPostPreviewProps) {
+  const t = useTranslations("blog");
+  const dateLocale = locale === "de" ? "de-DE" : "en-US";
+
   return (
     <Link
-      href={`/blog/${post.slug}`}
+      href={{ pathname: "/blog/[slug]", params: { slug: post.slug } }}
       className="group block rounded-lg border border-[#1a1a1a] bg-[#1a1a1a]/50 p-6 transition-all hover:border-[#22d3ee]/30 hover:bg-[#1a1a1a]"
     >
       <div className="flex items-center gap-3 text-xs text-[#737373]">
         <time dateTime={post.date}>
-          {new Date(post.date).toLocaleDateString("de-DE", {
+          {new Date(post.date).toLocaleDateString(dateLocale, {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -34,7 +39,7 @@ export default function BlogPostPreview({ post }: BlogPostPreviewProps) {
       </h3>
       <p className="mt-2 text-sm text-[#737373]">{post.description}</p>
       <span className="mt-4 inline-flex items-center gap-1 text-sm text-[#22d3ee] opacity-0 transition-opacity group-hover:opacity-100">
-        Lesen
+        {t("read")}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export interface Project {
   title: string;
-  description: string;
+  descriptionKey: string;
   tags: string[];
   href: string;
   external?: boolean;
@@ -10,9 +10,10 @@ export interface Project {
 
 interface ProjectCardProps {
   project: Project;
+  description: string;
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({ project, description }: ProjectCardProps) {
   const CardWrapper = project.external ? "a" : Link;
   const cardProps = project.external
     ? { href: project.href, target: "_blank", rel: "noopener noreferrer" }
@@ -47,7 +48,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </svg>
         )}
       </div>
-      <p className="mt-2 text-sm text-[#737373]">{project.description}</p>
+      <p className="mt-2 text-sm text-[#737373]">{description}</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {project.tags.map((tag) => (
           <span

@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import SocialLinks from "./SocialLinks";
 
 export default function Footer() {
+  const t = useTranslations("footer");
   const currentYear = new Date().getFullYear();
 
   const openCookieSettings = () => {
@@ -23,16 +25,16 @@ export default function Footer() {
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-xs text-[#737373] sm:justify-start">
               <Link href="/impressum" className="transition-colors hover:text-[#e5e5e5]">
-                Impressum
+                {t("impressum")}
               </Link>
               <Link href="/datenschutz" className="transition-colors hover:text-[#e5e5e5]">
-                Datenschutz
+                {t("datenschutz")}
               </Link>
               <button
                 onClick={openCookieSettings}
                 className="transition-colors hover:text-[#e5e5e5]"
               >
-                Cookie-Einstellungen
+                {t("cookieSettings")}
               </button>
             </div>
           </div>

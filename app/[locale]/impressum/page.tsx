@@ -1,18 +1,39 @@
 import { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Impressum",
-  description: "Impressum von Niklas Held.",
-  robots: { index: false, follow: true },
+type Props = {
+  params: Promise<{ locale: string }>;
 };
 
-export default function ImpressumPage() {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "impressum" });
+
+  return {
+    title: t("title"),
+    description: t("metaDescription"),
+    robots: { index: false, follow: true },
+  };
+}
+
+export default async function ImpressumPage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const t = await getTranslations();
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
       <section className="py-16">
         <p className="font-mono text-sm text-[#22d3ee]">{"// impressum"}</p>
         <h1 className="mt-4 text-3xl font-bold text-[#e5e5e5] sm:text-4xl">Impressum</h1>
+
+        {locale === "en" && (
+          <div className="mt-6 rounded-lg border border-[#22d3ee]/20 bg-[#22d3ee]/5 p-4">
+            <p className="text-sm text-[#a3a3a3]">{t("legalDisclaimer")}</p>
+          </div>
+        )}
 
         <div className="mt-8 space-y-8 text-[#a3a3a3]">
           <div>

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 export default function KontaktPage() {
+  const t = useTranslations("contact");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -32,35 +34,31 @@ export default function KontaktPage() {
         setFormData({ name: "", email: "", subject: "", message: "" });
       } else {
         setStatus("error");
-        setErrorMessage(data.error || "Ein Fehler ist aufgetreten.");
+        setErrorMessage(data.error || t("errorGeneric"));
       }
     } catch {
       setStatus("error");
-      setErrorMessage("Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.");
+      setErrorMessage(t("errorRetry"));
     }
   };
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
       <section className="py-16">
-        <p className="font-mono text-sm text-[#22d3ee]">{"// kontakt"}</p>
-        <h1 className="mt-4 text-3xl font-bold text-[#e5e5e5] sm:text-4xl">Kontakt</h1>
-        <p className="mt-4 text-[#a3a3a3]">
-          Haben Sie Fragen oder ein Projekt? Schreiben Sie mir!
-        </p>
+        <p className="font-mono text-sm text-[#22d3ee]">{t("heading")}</p>
+        <h1 className="mt-4 text-3xl font-bold text-[#e5e5e5] sm:text-4xl">{t("pageTitle")}</h1>
+        <p className="mt-4 text-[#a3a3a3]">{t("description")}</p>
 
         <div className="mt-8 max-w-xl">
           {status === "success" ? (
             <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-6">
-              <h2 className="font-semibold text-green-400">Nachricht gesendet!</h2>
-              <p className="mt-2 text-[#a3a3a3]">
-                Vielen Dank für Ihre Nachricht. Ich werde mich so schnell wie möglich bei Ihnen melden.
-              </p>
+              <h2 className="font-semibold text-green-400">{t("successTitle")}</h2>
+              <p className="mt-2 text-[#a3a3a3]">{t("successMessage")}</p>
               <button
                 onClick={() => setStatus("idle")}
                 className="mt-4 text-[#22d3ee] hover:underline"
               >
-                Weitere Nachricht senden
+                {t("sendAnother")}
               </button>
             </div>
           ) : (
@@ -73,7 +71,7 @@ export default function KontaktPage() {
 
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-[#e5e5e5]">
-                  Name <span className="text-[#22d3ee]">*</span>
+                  {t("nameLabel")} <span className="text-[#22d3ee]">*</span>
                 </label>
                 <input
                   type="text"
@@ -82,13 +80,13 @@ export default function KontaktPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="mt-2 w-full rounded-lg border border-[#333] bg-[#111] px-4 py-3 text-[#e5e5e5] placeholder-[#666] focus:border-[#22d3ee] focus:outline-none focus:ring-1 focus:ring-[#22d3ee]"
-                  placeholder="Ihr Name"
+                  placeholder={t("namePlaceholder")}
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-[#e5e5e5]">
-                  E-Mail <span className="text-[#22d3ee]">*</span>
+                  {t("emailLabel")} <span className="text-[#22d3ee]">*</span>
                 </label>
                 <input
                   type="email"
@@ -97,13 +95,13 @@ export default function KontaktPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="mt-2 w-full rounded-lg border border-[#333] bg-[#111] px-4 py-3 text-[#e5e5e5] placeholder-[#666] focus:border-[#22d3ee] focus:outline-none focus:ring-1 focus:ring-[#22d3ee]"
-                  placeholder="ihre@email.de"
+                  placeholder={t("emailPlaceholder")}
                 />
               </div>
 
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-[#e5e5e5]">
-                  Betreff
+                  {t("subjectLabel")}
                 </label>
                 <input
                   type="text"
@@ -111,13 +109,13 @@ export default function KontaktPage() {
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                   className="mt-2 w-full rounded-lg border border-[#333] bg-[#111] px-4 py-3 text-[#e5e5e5] placeholder-[#666] focus:border-[#22d3ee] focus:outline-none focus:ring-1 focus:ring-[#22d3ee]"
-                  placeholder="Worum geht es?"
+                  placeholder={t("subjectPlaceholder")}
                 />
               </div>
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-[#e5e5e5]">
-                  Nachricht <span className="text-[#22d3ee]">*</span>
+                  {t("messageLabel")} <span className="text-[#22d3ee]">*</span>
                 </label>
                 <textarea
                   id="message"
@@ -126,16 +124,16 @@ export default function KontaktPage() {
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   className="mt-2 w-full resize-none rounded-lg border border-[#333] bg-[#111] px-4 py-3 text-[#e5e5e5] placeholder-[#666] focus:border-[#22d3ee] focus:outline-none focus:ring-1 focus:ring-[#22d3ee]"
-                  placeholder="Ihre Nachricht..."
+                  placeholder={t("messagePlaceholder")}
                 />
               </div>
 
               <p className="text-sm text-[#666]">
-                <span className="text-[#22d3ee]">*</span> Pflichtfelder. Mit dem Absenden erklären Sie sich mit der Verarbeitung Ihrer Daten gemäß unserer{" "}
+                <span className="text-[#22d3ee]">*</span> {t("requiredFields")}{" "}
                 <Link href="/datenschutz" className="text-[#22d3ee] hover:underline">
-                  Datenschutzerklärung
+                  {t("privacyPolicy")}
                 </Link>{" "}
-                einverstanden.
+                {t("requiredFieldsEnd")}
               </p>
 
               <button
@@ -143,7 +141,7 @@ export default function KontaktPage() {
                 disabled={status === "loading"}
                 className="w-full rounded-lg bg-[#22d3ee] px-6 py-3 font-medium text-[#0a0a0a] transition-colors hover:bg-[#06b6d4] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {status === "loading" ? "Wird gesendet..." : "Nachricht senden"}
+                {status === "loading" ? t("sending") : t("send")}
               </button>
             </form>
           )}

@@ -1,29 +1,39 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { getPostBySlug, getAllPostSlugs } from "@/lib/mdx";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { routing } from "@/i18n/routing";
 
 interface BlogPostPageProps {
   params: Promise<{
     slug: string;
+    locale: string;
   }>;
 }
 
 export async function generateStaticParams() {
-  const slugs = getAllPostSlugs();
-  return slugs.map((slug) => ({ slug }));
+  const params: { locale: string; slug: string }[] = [];
+  for (const locale of routing.locales) {
+    const slugs = getAllPostSlugs(locale);
+    for (const slug of slugs) {
+      params.push({ locale, slug });
+    }
+  }
+  return params;
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const { slug, locale } = await params;
+  const t = await getTranslations({ locale, namespace: "blog" });
+  const post = getPostBySlug(slug, locale);
 
   if (!post) {
     return {
-      title: "Post nicht gefunden",
+      title: t("notFound"),
     };
   }
 
@@ -40,12 +50,17 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const { slug, locale } = await params;
+  setRequestLocale(locale);
+
+  const t = await getTranslations("blog");
+  const post = getPostBySlug(slug, locale);
 
   if (!post) {
     notFound();
   }
+
+  const dateLocale = locale === "de" ? "de-DE" : "en-US";
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -66,13 +81,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               clipRule="evenodd"
             />
           </svg>
-          Zurück zum Blog
+          {t("backToBlog")}
         </Link>
 
         <header className="mt-8">
           <div className="flex items-center gap-3 text-sm text-[#737373]">
             <time dateTime={post.date}>
-              {new Date(post.date).toLocaleDateString("de-DE", {
+              {new Date(post.date).toLocaleDateString(dateLocale, {
                 year: "numeric",
                 month: "long",
                 day: "numeric",

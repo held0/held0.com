@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "title": "Niklas Held - Software Developer",
+    "titleTemplate": "%s | Niklas Held",
+    "description": "Software Developer from Germany. I build web apps and mobile applications with modern technologies."
+  },
+  "nav": {
+    "home": "Home",
+    "projects": "Projects",
+    "about": "About"
+  },
+  "home": {
+    "greeting": "// hey, I'm",
+    "tagline": "Builder from Germany",
+    "projectsHeading": "// projects",
+    "viewAll": "View all projects"
+  },
+  "projects": {
+    "title": "Projects",
+    "metaDescription": "An overview of my projects and open-source work.",
+    "heading": "// projects",
+    "pageTitle": "My Projects",
+    "description": "A collection of projects I've worked on. From web apps to mobile applications."
+  },
+  "projectDescriptions": {
+    "imposter-online": "An online multiplayer game inspired by Among Us. Playable directly in the browser without download.",
+    "offenesprechstunden": "Platform for finding doctors with walk-in hours. Find a doctor without an appointment.",
+    "held0": "This portfolio website. Minimalist design with developer vibes. Open source on GitHub."
+  },
+  "about": {
+    "title": "About me",
+    "metaDescription": "Learn more about me, my work and my interests.",
+    "heading": "// about me",
+    "bio1": "Spent years writing PHP, Symfony, and Vue as a software developer. Then quit, because the future is happening somewhere else. Now I hack my way through everything that comes to mind with AI tools — faster and more creative than ever.",
+    "bio2": "My stack changes weekly. The only constant: the urge to build things.",
+    "skillsHeading": "// skills",
+    "contactHeading": "// contact",
+    "contactText": "Got a question or want to collaborate on a project? Feel free to send me an email or reach out on social media."
+  },
+  "contact": {
+    "title": "Contact",
+    "metaDescription": "Get in touch for questions or project inquiries.",
+    "heading": "// contact",
+    "pageTitle": "Contact",
+    "description": "Have questions or a project? Write to me!",
+    "successTitle": "Message sent!",
+    "successMessage": "Thank you for your message. I'll get back to you as soon as possible.",
+    "sendAnother": "Send another message",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "subjectLabel": "Subject",
+    "messageLabel": "Message",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "your@email.com",
+    "subjectPlaceholder": "What is it about?",
+    "messagePlaceholder": "Your message...",
+    "requiredFields": "Required fields. By submitting, you agree to the processing of your data according to our",
+    "privacyPolicy": "Privacy Policy",
+    "requiredFieldsEnd": ".",
+    "sending": "Sending...",
+    "send": "Send message",
+    "errorGeneric": "An error occurred.",
+    "errorRetry": "An error occurred. Please try again later."
+  },
+  "blog": {
+    "title": "Blog",
+    "metaDescription": "Thoughts on software development, projects and technology.",
+    "heading": "// blog",
+    "description": "Thoughts on software development, projects and everything that interests me.",
+    "emptyState": "No blog posts yet",
+    "emptyStateHint": "Check back soon!",
+    "read": "Read",
+    "readingTime": "{minutes} min read",
+    "backToBlog": "Back to blog",
+    "notFound": "Post not found"
+  },
+  "impressum": {
+    "title": "Legal Notice",
+    "metaDescription": "Legal notice by Niklas Held."
+  },
+  "datenschutz": {
+    "title": "Privacy Policy",
+    "metaDescription": "Privacy policy according to GDPR."
+  },
+  "legalDisclaimer": "This page is only available in German as it must comply with German legal requirements.",
+  "footer": {
+    "impressum": "Legal Notice",
+    "datenschutz": "Privacy",
+    "cookieSettings": "Cookie Settings"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "backHome": "Back to homepage"
+  }
+}

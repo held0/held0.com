@@ -30,14 +30,13 @@ export default function UeberPage() {
 
         <div className="mt-8 space-y-6 text-[#a3a3a3]">
           <p>
-            Ich bin Software Developer aus Deutschland mit einer Leidenschaft für sauberen Code und
-            durchdachte User Experiences. Mein Fokus liegt auf der Entwicklung von Web-Apps und
-            mobilen Anwendungen mit modernen Technologien.
+            Jahrelang als Softwareentwickler PHP, Symfony und Vue geschrieben. Dann gekündigt,
+            weil die Zukunft woanders passiert. Jetzt hacke ich mich mit AI-Tools durch alles,
+            was mir in den Sinn kommt — schneller und kreativer als je zuvor.
           </p>
           <p>
-            Wenn ich nicht gerade code, findest du mich wahrscheinlich beim Erkunden neuer
-            Technologien, beim Lesen von Tech-Blogs oder beim Arbeiten an Side-Projects, die
-            niemand braucht aber ich trotzdem bauen muss.
+            Mein Stack ändert sich wöchentlich. Das Einzige, was bleibt: der Drang, Dinge zu
+            bauen.
           </p>
         </div>
 

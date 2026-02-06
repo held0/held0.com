@@ -13,8 +13,7 @@ export default function Home() {
         <p className="font-mono text-sm text-[#22d3ee]">{"// hallo, ich bin"}</p>
         <h1 className="mt-4 text-4xl font-bold text-[#e5e5e5] sm:text-5xl">Niklas Held</h1>
         <p className="mt-4 max-w-xl text-lg text-[#737373]">
-          Software Developer aus Deutschland. Ich baue Web-Apps und mobile Anwendungen mit modernen
-          Technologien.
+          Builder aus Deutschland.
         </p>
         <div className="mt-8">
           <SocialLinks />

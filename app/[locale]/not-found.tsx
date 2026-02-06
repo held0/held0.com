@@ -1,13 +1,14 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 export default function NotFound() {
+  const t = useTranslations("notFound");
+
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-4xl flex-col items-center justify-center px-6 py-16 text-center">
       <p className="font-mono text-6xl font-bold text-[#22d3ee]">404</p>
-      <h1 className="mt-4 text-2xl font-bold text-[#e5e5e5]">Seite nicht gefunden</h1>
-      <p className="mt-2 text-[#737373]">
-        Die Seite, die du suchst, existiert nicht oder wurde verschoben.
-      </p>
+      <h1 className="mt-4 text-2xl font-bold text-[#e5e5e5]">{t("title")}</h1>
+      <p className="mt-2 text-[#737373]">{t("description")}</p>
       <Link
         href="/"
         className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#1a1a1a] px-6 py-3 text-sm text-[#e5e5e5] transition-colors hover:bg-[#22d3ee]/10 hover:text-[#22d3ee]"
@@ -24,7 +25,7 @@ export default function NotFound() {
             clipRule="evenodd"
           />
         </svg>
-        Zurück zur Startseite
+        {t("backHome")}
       </Link>
     </div>
   );

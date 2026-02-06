@@ -1,16 +1,18 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/projekte", label: "Projekte" },
-  { href: "/ueber", label: "Über" },
-];
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Header() {
+  const t = useTranslations("nav");
   const pathname = usePathname();
+
+  const navItems = [
+    { href: "/" as const, label: t("home") },
+    { href: "/projekte" as const, label: t("projects") },
+    { href: "/ueber" as const, label: t("about") },
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#1a1a1a] bg-[#0f0f0f]/80 backdrop-blur-sm">
@@ -24,23 +26,26 @@ export default function Header() {
           <span className="text-[#22d3ee]">{" />"}</span>
         </Link>
 
-        <ul className="flex items-center gap-6">
-          {navItems.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className={`text-sm transition-colors ${
-                  pathname === item.href ||
-                  (item.href !== "/" && pathname.startsWith(item.href))
-                    ? "text-[#22d3ee]"
-                    : "text-[#737373] hover:text-[#e5e5e5]"
-                }`}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center gap-6">
+          <ul className="flex items-center gap-6">
+            {navItems.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={`text-sm transition-colors ${
+                    pathname === item.href ||
+                    (item.href !== "/" && pathname.startsWith(item.href))
+                      ? "text-[#22d3ee]"
+                      : "text-[#737373] hover:text-[#e5e5e5]"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <LanguageSwitcher />
+        </div>
       </nav>
     </header>
   );

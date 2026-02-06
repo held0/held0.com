@@ -1,6 +1,7 @@
 "use client";
 
 import Script from "next/script";
+import { useLocale } from "next-intl";
 
 interface CookieConsentProps {
   gaId?: string;
@@ -20,6 +21,8 @@ declare global {
 }
 
 export function CookieConsent({ gaId }: CookieConsentProps) {
+  const locale = useLocale();
+
   const initCookieConsent = () => {
     if (typeof window === "undefined" || !window.CookieConsent) return;
 
@@ -72,7 +75,7 @@ export function CookieConsent({ gaId }: CookieConsentProps) {
       },
 
       language: {
-        default: "de",
+        default: locale,
         autoDetect: "document",
         translations: {
           de: {
@@ -106,6 +109,42 @@ export function CookieConsent({ gaId }: CookieConsentProps) {
                   title: "Analyse-Cookies",
                   description:
                     "Diese Cookies ermöglichen es uns, Besuche und Verkehrsquellen zu zählen, damit wir die Leistung unserer Website messen und verbessern können.",
+                  linkedCategory: "analytics",
+                },
+              ],
+            },
+          },
+          en: {
+            consentModal: {
+              title: "Cookie Settings",
+              description:
+                'We use cookies to ensure you get the best experience on our website. <a href="/en/datenschutz">Privacy Policy</a>',
+              acceptAllBtn: "Accept all",
+              acceptNecessaryBtn: "Necessary only",
+              showPreferencesBtn: "Settings",
+            },
+            preferencesModal: {
+              title: "Cookie Settings",
+              acceptAllBtn: "Accept all",
+              acceptNecessaryBtn: "Necessary only",
+              savePreferencesBtn: "Save preferences",
+              closeIconLabel: "Close",
+              sections: [
+                {
+                  title: "Cookie Usage",
+                  description:
+                    'We use cookies to ensure basic website functionality and to improve your online experience. <a href="/en/datenschutz" class="cc-link">Privacy Policy</a>',
+                },
+                {
+                  title: "Necessary Cookies",
+                  description:
+                    "These cookies are essential for the proper functioning of the website.",
+                  linkedCategory: "necessary",
+                },
+                {
+                  title: "Analytics Cookies",
+                  description:
+                    "These cookies allow us to count visits and traffic sources so we can measure and improve the performance of our website.",
                   linkedCategory: "analytics",
                 },
               ],

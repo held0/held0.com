@@ -1,9 +1,9 @@
 import { Metadata } from "next";
 import SocialLinks from "@/components/SocialLinks";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Über mich",
-  description: "Erfahre mehr über mich, meine Arbeit und meine Interessen.",
+type Props = {
+  params: Promise<{ locale: string }>;
 };
 
 const skills = [
@@ -21,23 +21,31 @@ const skills = [
   },
 ];
 
-export default function UeberPage() {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "about" });
+
+  return {
+    title: t("title"),
+    description: t("metaDescription"),
+  };
+}
+
+export default async function UeberPage({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const t = await getTranslations("about");
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
       <section className="py-16">
-        <p className="font-mono text-sm text-[#22d3ee]">{"// über mich"}</p>
+        <p className="font-mono text-sm text-[#22d3ee]">{t("heading")}</p>
         <h1 className="mt-4 text-3xl font-bold text-[#e5e5e5] sm:text-4xl">Niklas Held</h1>
 
         <div className="mt-8 space-y-6 text-[#a3a3a3]">
-          <p>
-            Jahrelang als Softwareentwickler PHP, Symfony und Vue geschrieben. Dann gekündigt,
-            weil die Zukunft woanders passiert. Jetzt hacke ich mich mit AI-Tools durch alles,
-            was mir in den Sinn kommt — schneller und kreativer als je zuvor.
-          </p>
-          <p>
-            Mein Stack ändert sich wöchentlich. Das Einzige, was bleibt: der Drang, Dinge zu
-            bauen.
-          </p>
+          <p>{t("bio1")}</p>
+          <p>{t("bio2")}</p>
         </div>
 
         <div className="mt-8">
@@ -46,7 +54,7 @@ export default function UeberPage() {
       </section>
 
       <section className="py-16">
-        <h2 className="font-mono text-sm text-[#22d3ee]">{"// skills"}</h2>
+        <h2 className="font-mono text-sm text-[#22d3ee]">{t("skillsHeading")}</h2>
 
         <div className="mt-8 grid gap-8 sm:grid-cols-3">
           {skills.map((skillGroup) => (
@@ -68,12 +76,9 @@ export default function UeberPage() {
       </section>
 
       <section className="py-16">
-        <h2 className="font-mono text-sm text-[#22d3ee]">{"// kontakt"}</h2>
+        <h2 className="font-mono text-sm text-[#22d3ee]">{t("contactHeading")}</h2>
         <div className="mt-8">
-          <p className="text-[#a3a3a3]">
-            Hast du eine Frage oder möchtest an einem Projekt zusammenarbeiten? Schreib mir gerne
-            eine E-Mail oder kontaktiere mich über Social Media.
-          </p>
+          <p className="text-[#a3a3a3]">{t("contactText")}</p>
           <a
             href="mailto:hello@held0.com"
             className="mt-4 inline-flex items-center gap-2 text-[#22d3ee] transition-opacity hover:opacity-80"

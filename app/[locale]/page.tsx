@@ -1,20 +1,28 @@
 import ProjectCard from "@/components/ProjectCard";
 import SocialLinks from "@/components/SocialLinks";
 import { getFeaturedProjects } from "@/lib/projects";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
-export default function Home() {
+type Props = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function Home({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const t = await getTranslations("home");
+  const tProjects = await getTranslations("projectDescriptions");
   const featuredProjects = getFeaturedProjects(3);
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
       {/* Hero Section */}
       <section className="py-16">
-        <p className="font-mono text-sm text-[#22d3ee]">{"// hallo, ich bin"}</p>
+        <p className="font-mono text-sm text-[#22d3ee]">{t("greeting")}</p>
         <h1 className="mt-4 text-4xl font-bold text-[#e5e5e5] sm:text-5xl">Niklas Held</h1>
-        <p className="mt-4 max-w-xl text-lg text-[#737373]">
-          Builder aus Deutschland
-        </p>
+        <p className="mt-4 max-w-xl text-lg text-[#737373]">{t("tagline")}</p>
         <div className="mt-8">
           <SocialLinks />
         </div>
@@ -22,10 +30,14 @@ export default function Home() {
 
       {/* Projects Section */}
       <section className="py-16">
-        <h2 className="font-mono text-sm text-[#22d3ee]">{"// projekte"}</h2>
+        <h2 className="font-mono text-sm text-[#22d3ee]">{t("projectsHeading")}</h2>
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
           {featuredProjects.map((project) => (
-            <ProjectCard key={project.title} project={project} />
+            <ProjectCard
+              key={project.title}
+              project={project}
+              description={tProjects(project.descriptionKey)}
+            />
           ))}
         </div>
         <div className="mt-8 text-center">
@@ -33,7 +45,7 @@ export default function Home() {
             href="/projekte"
             className="inline-flex items-center gap-2 text-sm text-[#737373] transition-colors hover:text-[#22d3ee]"
           >
-            Alle Projekte ansehen
+            {t("viewAll")}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"

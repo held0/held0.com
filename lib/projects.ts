@@ -16,6 +16,13 @@ export const projects: Project[] = [
     external: true,
   },
   {
+    title: "detect-user-preferences",
+    descriptionKey: "detect-user-preferences",
+    tags: ["Claude Code", "Open Source", "Skill", "i18n"],
+    href: "https://github.com/held0/claude-skill-detect-preferences",
+    external: true,
+  },
+  {
     title: "held0.com",
     descriptionKey: "held0",
     tags: ["Next.js", "TypeScript", "Tailwind CSS"],

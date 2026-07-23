@@ -2,6 +2,13 @@ import { Project } from "@/components/ProjectCard";
 
 export const projects: Project[] = [
   {
+    title: "checkfirma.de",
+    descriptionKey: "checkfirma",
+    tags: ["FastAPI", "Python", "HTML/CSS", "SEO"],
+    href: "https://checkfirma.de",
+    external: true,
+  },
+  {
     title: "imposter-online.com",
     descriptionKey: "imposter-online",
     tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "next-intl"],

@@ -23,6 +23,7 @@
     "description": "A collection of projects I've worked on. From web apps to mobile applications."
   },
   "projectDescriptions": {
+    "checkfirma": "Free instant check whether a company name is still available — commercial register, trademark register and domains in one pass, no signup.",
     "imposter-online": "An online multiplayer game inspired by Among Us. Playable directly in the browser without download.",
     "offenesprechstunden": "Platform for finding doctors with walk-in hours. Find a doctor without an appointment.",
     "detect-user-preferences": "Open-source Claude Code skill. Auto-detects timezone, language and system preferences — detect once, apply forever.",

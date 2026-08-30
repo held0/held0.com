@@ -9,6 +9,13 @@ export const projects: Project[] = [
     external: true,
   },
   {
+    title: "fahrtrichtung.info",
+    descriptionKey: "fahrtrichtung",
+    tags: ["Browser Extension", "JavaScript", "Manifest V3", "Chrome/Firefox/Edge"],
+    href: "https://fahrtrichtung.info",
+    external: true,
+  },
+  {
     title: "imposter-online.com",
     descriptionKey: "imposter-online",
     tags: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "next-intl"],

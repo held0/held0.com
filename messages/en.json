@@ -24,6 +24,7 @@
   },
   "projectDescriptions": {
     "checkfirma": "Free instant check whether a company name is still available — commercial register, trademark register and domains in one pass, no signup.",
+    "fahrtrichtung": "Browser extension that shows the direction of travel of ICE/IC/EC trains during seat selection on bahn.de — never ride backwards again. For Chrome, Firefox and Edge.",
     "imposter-online": "An online multiplayer game inspired by Among Us. Playable directly in the browser without download.",
     "offenesprechstunden": "Platform for finding doctors with walk-in hours. Find a doctor without an appointment.",
     "detect-user-preferences": "Open-source Claude Code skill. Auto-detects timezone, language and system preferences — detect once, apply forever.",

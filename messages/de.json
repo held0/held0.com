@@ -24,6 +24,7 @@
   },
   "projectDescriptions": {
     "checkfirma": "Kostenlose Sofort-Prüfung, ob ein Firmenname noch frei ist — Handelsregister, Markenregister und Domains in einem Durchlauf, ohne Anmeldung.",
+    "fahrtrichtung": "Browser-Extension, die bei der Sitzplatzwahl auf bahn.de die Fahrtrichtung von ICE/IC/EC-Zügen anzeigt — nie wieder rückwärts fahren. Für Chrome, Firefox und Edge.",
     "imposter-online": "Ein Online-Multiplayer-Spiel inspiriert von Among Us. Spielbar direkt im Browser ohne Download.",
     "offenesprechstunden": "Plattform zur Suche von Ärzten mit offenen Sprechstunden. Einfach Arzt finden ohne Termin.",
     "detect-user-preferences": "Open-Source Claude Code Skill. Erkennt automatisch Timezone, Sprache und Systemeinstellungen — einmal erkennen, für immer anwenden.",

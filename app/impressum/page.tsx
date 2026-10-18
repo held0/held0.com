@@ -35,7 +35,14 @@ export default function Impressum() {
         überschrieben. Gehostet wird bei der Hetzner Online GmbH, Gunzenhausen, als
         Auftragsverarbeiter.
       </p>
-      <p>Es gibt keine Cookies, kein Tracking und keine eingebundenen Drittinhalte.</p>
+      <p>
+        Für eine anonyme Reichweitenmessung nutze ich Umami auf meinem eigenen Server bei der
+        Hetzner Online GmbH. Erfasst werden aufgerufene Seite, Referrer, Browser, Betriebssystem,
+        Gerätetyp, Bildschirmgröße und das aus der IP-Adresse abgeleitete Land; die IP-Adresse
+        selbst wird nicht gespeichert. Es werden keine Cookies gesetzt und keine Daten an Dritte
+        weitergegeben (Art. 6 Abs. 1 lit. f DSGVO).
+      </p>
+      <p>Es gibt keine Cookies und keine eingebundenen Drittinhalte.</p>
       <p>
         Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
         Widerspruch und Datenübertragbarkeit sowie auf Beschwerde bei einer

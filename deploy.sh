@@ -33,7 +33,7 @@ fi
 echo "→ Build ${SHA:0:7} ($STAGE)"
 git archive HEAD | S "rm -rf /tmp/$SERVICE-build && mkdir -p /tmp/$SERVICE-build && tar -x -C /tmp/$SERVICE-build && cd /tmp/$SERVICE-build && docker build -q -t $IMAGE:$SHA ."
 
-OLD=$(S "docker ps -q --filter label=service=$SERVICE")
+OLD=$(S "docker ps -q --filter label=service=$SERVICE" | tr '\n' ' ')
 ENV=""
 if [ "$STAGE" = dev ]; then
   # Zugang user:passwort liegt nur auf dem Server; wird beim ersten Mal erzeugt
@@ -54,8 +54,9 @@ S "docker run --rm --network kamal curlimages/curl -sf -o /dev/null http://$NEW:
 echo "→ Proxy umschalten"
 S "docker exec kamal-proxy kamal-proxy deploy $SERVICE --target $NEW:$PORT $HOSTS --tls --health-check-path /up"
 
-if [ -n "$OLD" ] && [ "$OLD" != "$NEW" ]; then
-  echo "→ Alten Container stoppen: $OLD (Rollback: docker start $OLD + Proxy zurück)"
+OLD=$(for c in $OLD; do [ "$c" != "$NEW" ] && echo -n "$c "; done; true)
+if [ -n "$OLD" ]; then
+  echo "→ Alten Container stoppen: $OLD(Rollback: docker start <id> + Proxy zurück)"
   S "docker stop $OLD" >/dev/null
 fi
 

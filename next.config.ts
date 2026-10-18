@@ -1,11 +1,16 @@
 import type { NextConfig } from "next";
-import createNextIntlPlugin from "next-intl/plugin";
+
+// Alte Seiten (Blog, Über, Kontakt, englische Version) gibt es nicht mehr.
+const gone = ["/projekte", "/ueber", "/kontakt", "/blog", "/blog/:path*", "/en", "/en/:path*", "/de", "/de/:path*"];
 
 const nextConfig: NextConfig = {
-  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   output: "standalone",
+  async redirects() {
+    return [
+      { source: "/datenschutz", destination: "/impressum#datenschutz", permanent: true },
+      ...gone.map((source) => ({ source, destination: "/", permanent: true })),
+    ];
+  },
 };
 
-const withNextIntl = createNextIntlPlugin();
-
-export default withNextIntl(nextConfig);
+export default nextConfig;

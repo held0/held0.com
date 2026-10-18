@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>Design-Varianten – held0</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0b0b0c; font-family: Inter, system-ui, sans-serif; overflow: hidden; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+  body.phone iframe { width: 390px; height: 844px; left: 50%; top: 50%; inset: auto; transform: translate(-50%, -50%) scale(var(--s, 1)); border-radius: 44px; box-shadow: 0 0 0 10px #1c1c1f, 0 30px 80px -20px #000; }
+  body.phone iframe { left: 50%; top: 50%; }
+  .ctl { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 10; display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 999px; background: rgba(18, 18, 20, 0.86); backdrop-filter: blur(14px); border: 1px solid #2c2c30; box-shadow: 0 16px 40px -12px #000; color: #eee; font-size: 0.82rem; max-width: calc(100% - 24px); overflow-x: auto; scrollbar-width: none; transition: opacity 0.2s, transform 0.2s; }
+  .ctl.hide { opacity: 0; pointer-events: none; transform: translate(-50%, 20px); }
+  .ctl button { font: inherit; font-weight: 600; padding: 7px 12px; border-radius: 999px; border: 0; background: transparent; color: #cfcfd4; cursor: pointer; white-space: nowrap; }
+  .ctl button:hover { background: #26262a; }
+  .ctl button.on { background: #f2f2f2; color: #111; }
+  .ctl .sep { width: 1px; align-self: stretch; background: #34343a; margin: 4px 2px; flex: none; }
+  .ctl b { padding: 0 8px; white-space: nowrap; color: #fff; }
+  .ctl .idea { color: #9a9aa2; font-weight: 500; padding-left: 4px; white-space: nowrap; }
+  .hint { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 10; padding: 6px 12px; border-radius: 999px; background: rgba(18, 18, 20, 0.8); color: #aaa; font-size: 0.75rem; transition: opacity 0.6s; pointer-events: none; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="hint" id="hint">← → Variante · ↑ ↓ Idee · 1–9/0 direkt · X raus · M Handy/Desktop · F Vollbild · H Leiste aus/an</div>
+<div class="ctl" id="ctl"></div>
+<script>
+// Projektliste wie in app/projects.ts
+const P = [
+  ["cinenow.app", "Kinoprogramm in deiner Nähe"],
+  ["checkfirma.de", "Prüft, ob ein Firmenname noch frei ist"],
+  ["fahrtrichtung.info", "Zeigt bei bahn.de die Fahrtrichtung im ICE"],
+  ["vokalreim.de", "Findet Vokalreime und mehrsilbige Reime für Rap"],
+  ["imposter-online.com", "Das Gesellschaftsspiel Imposter im Browser"],
+];
+const A = (n, inner, cls = "") => `<a class="${cls}" href="https://${n}" target="_blank" rel="noopener">${inner ?? n}</a>`;
+const LEGAL = `<a href="#" class="legal">impressum · datenschutz</a>`;
+const MONO = `ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace`;
+const FONTS = "family=JetBrains+Mono:wght@400;600;800&family=IBM+Plex+Mono:wght@400;600&family=Space+Mono:wght@400;700&family=VT323&family=Instrument+Serif:ital@0;1&family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Inter:wght@300..900&family=Space+Grotesk:wght@300..700&family=Archivo+Black&family=Archivo:wdth,wght@62..125,100..900&family=Anton&family=Caveat:wght@400..700&family=Special+Elite&family=Press+Start+2P&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Syne:wght@400..800&family=Unbounded:wght@300..900";
+const page = (css, body) => `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?${FONTS}&display=swap"><style>*{box-sizing:border-box}html,body{margin:0}a{color:inherit}${css}</style></head><body>${body}</body></html>`;
+const blink = `@keyframes blink{50%{opacity:0}}`;
+
+// ---------- Idee 1: Terminal (Basis = heutige Seite) ----------
+const T = [
+  { n: "wie heute", bg: "#0b0b0b", fg: "#eee", mu: "#888", mode: "cursor" },
+  { n: "Prompt: ls projekte", bg: "#0b0b0b", fg: "#e8e8e8", mu: "#7a7a7a", ac: "#7ee787", mode: "prompt" },
+  { n: "Verzeichnisbaum", bg: "#101418", fg: "#d6e2ee", mu: "#6b7c8c", ac: "#79c0ff", mode: "tree" },
+  { n: "Grüner Phosphor", bg: "#020a02", fg: "#33ff66", mu: "#1a9a3a", ac: "#33ff66", mode: "prompt", glow: 1, font: "VT323", size: "1.35rem" },
+  { n: "Bernstein-Monitor", bg: "#0d0700", fg: "#ffb000", mu: "#a06a00", ac: "#ffb000", mode: "cursor", glow: 1, font: "VT323", size: "1.3rem" },
+  { n: "Zeilennummern (Editor)", bg: "#1e1e1e", fg: "#d4d4d4", mu: "#6a9955", ac: "#ce9178", mode: "numbers" },
+  { n: "JSON", bg: "#fafafa", fg: "#24292f", mu: "#6e7781", ac: "#0a3069", mode: "json" },
+  { n: "Manpage", bg: "#fff", fg: "#111", mu: "#555", mode: "man" },
+  { n: "ASCII-Tabelle", bg: "#0b0b0b", fg: "#ddd", mu: "#777", mode: "table" },
+  { n: "Hell, linksbündig, Kommentare", bg: "#f6f5f0", fg: "#1a1a1a", mu: "#8a877c", ac: "#b4451f", mode: "comment" },
+];
+function terminal(v) {
+  const font = v.font ? `"${v.font}", ${MONO}` : MONO;
+  const glow = v.glow ? `text-shadow:0 0 6px ${v.fg}88, 0 0 18px ${v.fg}33;` : "";
+  let body = "";
+  const wpad = Math.max(...P.map((p) => p[0].length)) + 2;
+  if (v.mode === "cursor") body = `<main class="c"><h1>held0<span>_</span></h1><ul>${P.map(([n, d]) => `<li>${A(n)}<p>${d}</p></li>`).join("")}</ul></main>`;
+  if (v.mode === "prompt") body = `<main><p><span class="ac">niklas@held0</span>:<span class="mu">~</span>$ ls -1 projekte/</p><pre>${P.map(([n, d]) => `${A(n, n.padEnd(wpad))}<span class="mu"># ${d}</span>`).join("\n")}</pre><p><span class="ac">niklas@held0</span>:<span class="mu">~</span>$ <span class="cur">█</span></p></main>`;
+  if (v.mode === "tree") body = `<main><pre><b>held0/</b>\n${P.map(([n, d], i) => `<span class="mu">${i === P.length - 1 ? "└──" : "├──"}</span> ${A(n, `<span class="ac">${n}</span>`)}\n<span class="mu">${i === P.length - 1 ? " " : "│"}       ${d}</span>`).join("\n")}\n\n<span class="mu">${P.length} Projekte, alle live</span></pre></main>`;
+  if (v.mode === "numbers") { let l = 0; const ln = (s) => `<span class="ln">${String(++l).padStart(2)}</span>  ${s}`; body = `<main><div class="tab">projekte.md</div><pre>${[ln(`<span class="ac"># held0</span>`), ln(""), ...P.flatMap(([n, d]) => [ln(`- ${A(n, `<span class="ac">[${n}]</span>`)}`), ln(`  <span class="mu">${d}</span>`)]), ln(""), ln(`<span class="cur">▍</span>`)].join("\n")}</pre></main>`; }
+  if (v.mode === "json") body = `<main><pre>{\n  <span class="ac">"held0"</span>: {\n${P.map(([n, d], i) => `    ${A(n, `<span class="ac">"${n}"</span>`)}: <span class="mu">"${d}"</span>${i < P.length - 1 ? "," : ""}`).join("\n")}\n  }\n}</pre></main>`;
+  if (v.mode === "man") body = `<main><pre><b>HELD0(1)</b>                 Projekte                 <b>HELD0(1)</b>\n\n<b>NAME</b>\n       held0 – Projekte von Niklas Held\n\n<b>PROJEKTE</b>\n${P.map(([n, d]) => `       ${A(n, `<b><u>${n}</u></b>`)}\n              ${d}`).join("\n\n")}\n\n<b>SIEHE AUCH</b>\n       impressum(7), datenschutz(7)</pre></main>`;
+  if (v.mode === "table") { const w = wpad, dw = Math.max(...P.map((p) => p[1].length)) + 2; const line = `+${"-".repeat(w + 1)}+${"-".repeat(dw)}+`; body = `<main class="c"><h1 style="font-size:2rem">held0</h1><pre class="mu">${line}\n| ${"projekt".padEnd(w)}| ${"was".padEnd(dw - 1)}|\n${line}\n${P.map(([n, d]) => `| ${A(n, `<span style="color:${v.fg}">${n.padEnd(w)}</span>`)}| ${d.padEnd(dw - 1)}|`).join("\n")}\n${line}</pre></main>`; }
+  if (v.mode === "comment") body = `<main><h1 style="text-align:left">held0<span>_</span></h1>${P.map(([n, d]) => `<p class="mu" style="margin:1.6rem 0 .2rem">// ${d}</p>${A(n, `<span class="ac">${n}</span>`)}`).join("")}</main>`;
+  return page(`body{background:${v.bg};color:${v.fg};font-family:${font};${v.size ? `font-size:${v.size};` : ""}${glow}min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16vh 24px 24px}
+main{width:100%;max-width:${v.mode === "table" ? "48rem" : "36rem"};flex:1}.c{text-align:left}
+h1{font-size:clamp(2.5rem,8vw,4.5rem);font-weight:600;letter-spacing:-.04em;margin:0 0 2.5rem;text-align:center}h1 span,.cur{animation:blink 1.1s steps(1) infinite}${blink}
+ul{list-style:none;padding:0;margin:0}li{margin:0 0 1.1rem}a{text-decoration:none}a:hover{text-decoration:underline}li p{color:${v.mu};margin:.2rem 0 0;font-size:.9rem}
+pre{font:inherit;line-height:1.7;white-space:pre;overflow-x:auto}.mu{color:${v.mu}}.ac{color:${v.ac || v.fg}}.ln{color:${v.mu};opacity:.6}
+.tab{display:inline-block;padding:.3rem .9rem;background:#2d2d2d;border-top:1px solid ${v.ac || v.fg};font-size:.8rem;margin-bottom:1rem}
+.legal{color:${v.mu};text-decoration:none;font-size:.75rem;margin-top:3rem}`, body + LEGAL);
+}
+
+// ---------- Idee 2: Editorial (Serifen, Magazin) ----------
+const E = [
+  { n: "Inhaltsverzeichnis mit Punktlinie", bg: "#f7f3ea", fg: "#1c1a16", mu: "#8b8273", font: "EB Garamond", mode: "toc" },
+  { n: "Große Kursive", bg: "#fff", fg: "#111", mu: "#777", font: "Instrument Serif", mode: "italic" },
+  { n: "Nummeriert, Fraunces", bg: "#f4efe6", fg: "#2a1f14", mu: "#9a8a74", ac: "#b3471d", font: "Fraunces", mode: "numbered" },
+  { n: "Dunkel, Playfair", bg: "#111", fg: "#f2ede4", mu: "#8d877c", ac: "#d9b26f", font: "Playfair Display", mode: "numbered" },
+  { n: "Zentriert, Kolophon", bg: "#fbfaf7", fg: "#222", mu: "#999", font: "EB Garamond", mode: "colophon" },
+  { n: "Zeitungskopf", bg: "#f2efe6", fg: "#111", mu: "#555", font: "Playfair Display", mode: "newspaper" },
+  { n: "Zwei Spalten mit Initiale", bg: "#fff", fg: "#1b1b1b", mu: "#8a8a8a", ac: "#a11d2b", font: "Fraunces", mode: "twocol" },
+  { n: "Riesige Ziffern", bg: "#ede8df", fg: "#1a1714", mu: "#8e8578", font: "Instrument Serif", mode: "bignum" },
+  { n: "Fußnoten", bg: "#fff", fg: "#111", mu: "#666", font: "EB Garamond", mode: "footnotes" },
+  { n: "Blau auf Creme", bg: "#f5f0e4", fg: "#1f3a8a", mu: "#6b7bb0", font: "Instrument Serif", mode: "italic" },
+];
+function editorial(v) {
+  let body = "";
+  if (v.mode === "toc") body = `<main><p class="kick">Inhalt</p><h1>held0</h1>${P.map(([n, d], i) => `<div class="toc">${A(n)}<span class="dots"></span><span class="mu">${i + 1}</span></div><p class="d">${d}</p>`).join("")}</main>`;
+  if (v.mode === "italic") body = `<main><h1><i>held0</i></h1>${P.map(([n, d]) => `<div class="it">${A(n, `<i>${n}</i>`)}<p class="mu">${d}</p></div>`).join("")}</main>`;
+  if (v.mode === "numbered") body = `<main><h1>held0<span class="ac">.</span></h1>${P.map(([n, d], i) => `<div class="num"><span class="ac">${String(i + 1).padStart(2, "0")}</span><div>${A(n)}<p class="mu">${d}</p></div></div>`).join("")}</main>`;
+  if (v.mode === "colophon") body = `<main style="text-align:center"><p class="kick">— Projekte —</p><h1 style="font-size:3.5rem">held0</h1><p class="mu" style="font-style:italic;margin-bottom:3rem">gesammelt von Niklas Held</p>${P.map(([n, d]) => `<div style="margin:0 0 2rem">${A(n, `<span style="font-variant:small-caps;font-size:1.5rem;letter-spacing:.06em">${n}</span>`)}<p class="mu" style="font-style:italic;margin:.2rem 0">${d}</p></div>`).join(`<p class="mu">❦</p>`)}</main>`;
+  if (v.mode === "newspaper") body = `<main style="max-width:56rem"><div class="mast"><span>Köln · ${new Date().toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" })}</span><h1>The held0 Times</h1><span>${P.length} Projekte · live</span></div><div class="cols">${P.map(([n, d], i) => `<article>${i === 0 ? `<p class="kick">Aufmacher</p>` : ""}<h2>${A(n)}</h2><p>${d}.</p></article>`).join("")}</div></main>`;
+  if (v.mode === "twocol") body = `<main style="max-width:52rem"><h1>held0</h1><div class="two">${P.map(([n, d]) => `<div><h2>${A(n)}</h2><p class="mu"><span class="drop ac">${d[0]}</span>${d.slice(1)}.</p></div>`).join("")}</div></main>`;
+  if (v.mode === "bignum") body = `<main style="max-width:48rem"><h1 style="font-size:1.1rem;letter-spacing:.2em;text-transform:uppercase">held0</h1>${P.map(([n, d], i) => `<div class="big"><span class="bn">${i + 1}</span><div>${A(n)}<p class="mu">${d}</p></div></div>`).join("")}</main>`;
+  if (v.mode === "footnotes") body = `<main><h1>held0</h1><p style="font-size:1.35rem;line-height:1.7">Gerade live sind ${P.map(([n], i) => `${A(n)}<sup class="mu">${i + 1}</sup>`).join(", ").replace(/, ([^,]*)$/, " und $1")}.</p><hr><ol class="mu">${P.map(([, d]) => `<li>${d}.</li>`).join("")}</ol></main>`;
+  return page(`body{background:${v.bg};color:${v.fg};font-family:"${v.font}",Georgia,serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12vh 28px 28px}
+main{width:100%;max-width:38rem;flex:1}h1{font-weight:400;font-size:clamp(3rem,10vw,5.5rem);letter-spacing:-.02em;margin:0 0 2.5rem;line-height:1}
+a{text-decoration:none}a:hover{text-decoration:underline;text-underline-offset:4px}.mu{color:${v.mu}}.ac{color:${v.ac || v.fg}}
+.kick{text-transform:uppercase;letter-spacing:.25em;font-size:.75rem;color:${v.mu};margin:0 0 .8rem}
+.toc{display:flex;align-items:baseline;gap:.6rem;font-size:1.5rem;margin-top:1.2rem}.dots{flex:1;border-bottom:2px dotted ${v.mu};transform:translateY(-5px)}.d{margin:.1rem 0 0;color:${v.mu};font-style:italic}
+.it{margin:0 0 1.8rem}.it a{font-size:clamp(2rem,6vw,2.8rem)}.it p{margin:.1rem 0 0;font-size:1.05rem}
+.num{display:grid;grid-template-columns:3rem 1fr;gap:1rem;padding:1.1rem 0;border-top:1px solid ${v.mu}55}.num a{font-size:1.6rem}.num p{margin:.2rem 0 0}.num>span{font-size:.9rem;padding-top:.5rem}
+.mast{display:flex;justify-content:space-between;align-items:center;border-top:3px double ${v.fg};border-bottom:3px double ${v.fg};padding:.6rem 0;margin-bottom:2rem;font-size:.8rem;flex-wrap:wrap;gap:.5rem}.mast h1{font-size:clamp(2rem,6vw,3.6rem);margin:0;font-weight:900}
+.cols{columns:3 14rem;column-rule:1px solid ${v.mu}66;column-gap:2rem}article{break-inside:avoid;margin-bottom:1.5rem}h2{font-size:1.4rem;margin:0 0 .3rem;font-weight:700}article:first-child h2{font-size:2.2rem}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:2rem 3rem}.drop{float:left;font-size:3.2rem;line-height:.8;padding:.3rem .4rem 0 0}
+.big{display:flex;gap:1.5rem;align-items:center;border-bottom:1px solid ${v.mu}55;padding:.4rem 0}.bn{font-size:6rem;line-height:1;width:4rem}.big a{font-size:1.8rem}.big p{margin:.2rem 0 0}
+hr{border:0;border-top:1px solid ${v.mu}77;width:6rem;margin:2.5rem 0 1rem}ol{padding-left:1.2rem;line-height:1.8}
+.legal{color:${v.mu};text-decoration:none;font-size:.8rem;margin-top:3rem;font-style:italic}`, body + LEGAL);
+}
+
+// ---------- Idee 3: Brutalistisch ----------
+const B = [
+  { n: "Gelb, riesig, Großbuchstaben", bg: "#ffe600", fg: "#000", mode: "stack" },
+  { n: "Schwarz mit Rot", bg: "#000", fg: "#fff", ac: "#ff2a1a", mode: "stack" },
+  { n: "Web 1.0 (rohes HTML)", mode: "raw" },
+  { n: "Balken je Projekt", bg: "#f0f0f0", fg: "#000", mode: "bars" },
+  { n: "Umrisse, Füllung beim Hover", bg: "#111", fg: "#f5f5f5", mode: "outline" },
+  { n: "Rahmen überall", bg: "#fff", fg: "#000", mode: "boxes" },
+  { n: "Knallblau", bg: "#0000ff", fg: "#fff", mode: "stack" },
+  { n: "Gedreht, quer", bg: "#ff5ec4", fg: "#000", mode: "rotated" },
+  { n: "Riesiges held0 unten", bg: "#e8e4dc", fg: "#000", mode: "bottom" },
+  { n: "Mono, Grauraster", bg: "#d9d9d9", fg: "#000", mode: "grid" },
+];
+function brutal(v) {
+  if (v.mode === "raw") return page(`body{font-family:Times,serif;margin:8px;background:#fff;color:#000}a{color:#00e}a:visited{color:#551a8b}`, `<h1>held0</h1><p>Willkommen auf meiner Homepage! Hier sind meine Projekte:</p><ul>${P.map(([n, d]) => `<li><a href="https://${n}" target="_blank"><b>${n}</b></a> - ${d}</li>`).join("")}</ul><hr><p><font size="2">Zuletzt aktualisiert: ${new Date().toLocaleDateString("de-DE")} · <a href="#">Impressum</a> · <a href="#">Datenschutz</a></font></p><p><img alt="" width="88" height="31" style="background:#ccc;border:1px outset #999"> <img alt="" width="88" height="31" style="background:#c0c0ff;border:1px outset #999"></p>`);
+  let body = "";
+  if (v.mode === "stack") body = `<h1>HELD0</h1>${P.map(([n, d]) => `<div class="row">${A(n, n.toUpperCase())}<span>${d.toUpperCase()}</span></div>`).join("")}`;
+  if (v.mode === "bars") body = `<h1>held0</h1>${P.map(([n, d], i) => A(n, `<b>${n}</b><span>${d} →</span>`, `bar b${i}`)).join("")}`;
+  if (v.mode === "outline") body = `<h1>held0</h1>${P.map(([n, d]) => `<div class="o">${A(n)}<span>${d}</span></div>`).join("")}`;
+  if (v.mode === "boxes") body = `<div class="bx"><h1>held0</h1>${P.map(([n, d]) => `<div class="box">${A(n)}<p>${d}</p></div>`).join("")}<div class="box f">${LEGAL}</div></div>`;
+  if (v.mode === "rotated") body = `<div class="rot"><h1>HELD0</h1>${P.map(([n, d]) => `<div class="row">${A(n, n.toUpperCase())}<span>${d}</span></div>`).join("")}</div>`;
+  if (v.mode === "bottom") body = `<div class="top">${P.map(([n, d]) => `<div class="row2">${A(n)}<span>${d}</span></div>`).join("")}</div><h1 class="huge">held0</h1>`;
+  if (v.mode === "grid") body = `<h1>[held0]</h1><div class="g">${P.map(([n, d], i) => `<div class="cell"><small>0${i + 1}</small>${A(n)}<p>${d}</p></div>`).join("")}</div>`;
+  return page(`body{background:${v.bg};color:${v.fg};font-family:"Archivo Black","Arial Black",sans-serif;min-height:100vh;padding:24px;margin:0}
+h1{font-size:clamp(4rem,20vw,14rem);line-height:.82;margin:0 0 2rem;letter-spacing:-.05em}a{text-decoration:none}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;border-top:6px solid ${v.fg};padding:.6rem 0;flex-wrap:wrap}.row a{font-size:clamp(1.6rem,5vw,3.4rem);color:${v.ac || v.fg}}.row a:hover{background:${v.fg};color:${v.bg}}.row span{font-family:Archivo,sans-serif;font-weight:500;font-size:.85rem}
+.bar{display:flex;justify-content:space-between;padding:1.6rem 1.2rem;margin-bottom:6px;font-size:clamp(1.2rem,4vw,2.4rem);flex-wrap:wrap;gap:.5rem}.bar span{font-family:Archivo;font-size:1rem;align-self:center}.b0{background:#ff4d00;color:#fff}.b1{background:#000;color:#fff}.b2{background:#00c853}.b3{background:#2962ff;color:#fff}.b4{background:#ffd600}.bar:hover{filter:invert(1)}
+.o a{font-size:clamp(2.2rem,8vw,5.5rem);color:transparent;-webkit-text-stroke:2px ${v.fg};display:block;line-height:1}.o a:hover{color:${v.fg}}.o span{font-family:Archivo;display:block;margin:0 0 1.4rem;opacity:.6}
+.bx{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));border:4px solid #000}.bx h1{grid-column:1/-1;border-bottom:4px solid #000;padding:1rem;margin:0}.box{border:2px solid #000;padding:1.4rem;font-size:1.5rem}.box p{font-family:Archivo;font-size:.95rem}.box:hover{background:#000;color:#fff}
+.rot{transform:rotate(-6deg);transform-origin:top left;padding-top:4rem}
+.top{min-height:55vh}.row2{display:flex;gap:1.5rem;align-items:baseline;font-size:1.4rem;padding:.3rem 0;flex-wrap:wrap}.row2 span{font-family:Archivo;font-size:.9rem;opacity:.6}.huge{font-size:31vw;margin:0;line-height:.75;position:fixed;bottom:-2vw;left:0;letter-spacing:-.07em}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:2px;background:#000;border:2px solid #000;font-family:"Space Mono",monospace}.cell{background:${v.bg};padding:1.2rem}.cell a{font-size:1.3rem;font-weight:700;display:block;margin:.4rem 0}.cell:hover{background:#fff}
+.legal{font-family:Archivo,sans-serif;font-size:.8rem;display:block;margin-top:2rem;text-decoration:underline}`, body + (v.mode === "boxes" ? "" : LEGAL));
+}
+
+// ---------- Idee 4: Swiss / Raster ----------
+const S = [
+  { n: "Rot-Akzent", bg: "#fff", fg: "#111", ac: "#e3000f", mode: "grid" },
+  { n: "Spalte „Projekte“ links", bg: "#f2f2f0", fg: "#111", ac: "#111", mode: "label" },
+  { n: "Nummern 01–05", bg: "#fff", fg: "#000", ac: "#0050ff", mode: "numbers" },
+  { n: "Invertiert", bg: "#0e0e0e", fg: "#f2f2f2", ac: "#ff4d00", mode: "grid" },
+  { n: "Senkrechter Titel", bg: "#fff", fg: "#111", ac: "#111", mode: "vertical" },
+  { n: "Großer Punkt", bg: "#f4f1ea", fg: "#111", ac: "#ff3b00", mode: "dot" },
+  { n: "Pfeile rechts", bg: "#fff", fg: "#111", ac: "#111", mode: "arrows" },
+  { n: "Blau-Weiß, Linien", bg: "#0033cc", fg: "#fff", ac: "#fff", mode: "arrows" },
+  { n: "Poster", bg: "#ece9e2", fg: "#111", ac: "#e3000f", mode: "poster" },
+  { n: "Dichte Mikrotypo", bg: "#fff", fg: "#111", ac: "#888", mode: "micro" },
+];
+function swiss(v) {
+  let body = "";
+  const rows = (cls = "r") => P.map(([n, d], i) => `<div class="${cls}"><span class="i">${String(i + 1).padStart(2, "0")}</span>${A(n, `<b>${n}</b>`)}<span class="d">${d}</span><span class="ar">↗</span></div>`).join("");
+  if (v.mode === "grid") body = `<header><h1>held0</h1><p>Projekte<br>Niklas Held<br>Köln</p></header>${rows()}`;
+  if (v.mode === "label") body = `<div class="lab"><h1>held0</h1><div><p class="small">Projekte</p>${rows()}</div></div>`;
+  if (v.mode === "numbers") body = `<h1>held0</h1><div class="nums">${P.map(([n, d], i) => `<div><span class="bign">${String(i + 1).padStart(2, "0")}</span>${A(n, `<b>${n}</b>`)}<p>${d}</p></div>`).join("")}</div>`;
+  if (v.mode === "vertical") body = `<div class="vert"><h1 class="v">held0</h1><div style="flex:1">${rows()}</div></div>`;
+  if (v.mode === "dot") body = `<div class="dotw"><div class="bigdot"></div><h1>held0</h1></div>${rows()}`;
+  if (v.mode === "arrows") body = `<h1>held0</h1>${rows("r ar2")}`;
+  if (v.mode === "poster") body = `<div class="poster"><h1>held<span class="ac">0</span></h1><div class="pl">${P.map(([n, d]) => `<p>${A(n, `<b>${n}</b>`)}<br>${d}</p>`).join("")}</div></div>`;
+  if (v.mode === "micro") body = `<div class="micro"><b>held0</b><span>Projekte von Niklas Held, Köln</span><span>Stand ${new Date().toLocaleDateString("de-DE")}</span></div>${rows("r mic")}`;
+  return page(`body{background:${v.bg};color:${v.fg};font-family:Inter,"Helvetica Neue",Helvetica,Arial,sans-serif;min-height:100vh;padding:4vw;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(3.5rem,13vw,9rem);font-weight:800;letter-spacing:-.06em;margin:0 0 3rem;line-height:.85}a{text-decoration:none}.ac{color:${v.ac}}
+header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid ${v.fg};margin-bottom:0}header p{font-size:.85rem;line-height:1.3;text-align:right;color:${v.ac}}
+.r{display:grid;grid-template-columns:3rem minmax(10rem,1fr) 2fr 1.5rem;gap:1rem;align-items:baseline;padding:1rem 0;border-bottom:1px solid ${v.fg}33}.r b{font-size:1.25rem}.i{color:${v.ac};font-size:.8rem}.d{opacity:.65;font-size:.95rem}.ar{color:${v.ac}}.r:hover b{color:${v.ac}}
+@media(max-width:640px){.r{grid-template-columns:2rem 1fr}.d{grid-column:2}.ar{display:none}}
+.lab{display:grid;grid-template-columns:minmax(10rem,1fr) 3fr;gap:2rem}.lab h1{font-size:2rem;margin:0}.small{text-transform:uppercase;font-size:.75rem;letter-spacing:.1em;margin:0 0 1rem;font-weight:700}@media(max-width:640px){.lab{grid-template-columns:1fr}}
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:2rem}.bign{display:block;font-size:4rem;font-weight:800;color:${v.ac};letter-spacing:-.05em}.nums b{font-size:1.15rem}.nums p{opacity:.65;margin:.3rem 0}
+.vert{display:flex;gap:3rem}.v{writing-mode:vertical-rl;transform:rotate(180deg);margin:0;font-size:clamp(4rem,14vw,10rem)}
+.dotw{position:relative}.bigdot{width:clamp(8rem,30vw,20rem);aspect-ratio:1;border-radius:50%;background:${v.ac};margin-bottom:-4rem}.dotw h1{position:relative}
+.ar2{grid-template-columns:3rem 1fr 2fr 2rem;font-size:1.1rem}.ar2 .ar{font-size:1.6rem;transition:transform .2s}.ar2:hover .ar{transform:translate(4px,-4px)}
+.poster{min-height:85vh;display:flex;flex-direction:column;justify-content:space-between}.poster h1{font-size:clamp(5rem,25vw,18rem)}.pl{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:1.5rem;font-size:.9rem;border-top:3px solid ${v.fg};padding-top:1rem}
+.micro{display:flex;gap:2rem;font-size:.75rem;border-bottom:1px solid ${v.fg};padding-bottom:.6rem;margin-bottom:4rem;flex-wrap:wrap}.mic{font-size:.85rem;padding:.5rem 0}.mic b{font-size:.95rem}
+.legal{display:block;margin-top:3rem;font-size:.75rem;opacity:.6;text-decoration:none}`, body + LEGAL);
+}
+
+// ---------- Idee 5: Index-Tabelle ----------
+const I = [
+  { n: "Tabelle mit Live-Punkt", bg: "#fff", fg: "#111", mu: "#8a8a8a", ac: "#16a34a", font: "Inter", mode: "table" },
+  { n: "Dunkel, Mono", bg: "#0c0c0c", fg: "#e6e6e6", mu: "#6e6e6e", ac: "#4ade80", font: "IBM Plex Mono", mode: "table" },
+  { n: "Zebra", bg: "#fafafa", fg: "#111", mu: "#888", ac: "#2563eb", font: "Inter", mode: "zebra" },
+  { n: "Tabellenkalkulation", bg: "#fff", fg: "#111", mu: "#777", ac: "#107c41", font: "Inter", mode: "sheet" },
+  { n: "Changelog", bg: "#fff", fg: "#18181b", mu: "#71717a", ac: "#7c3aed", font: "Inter", mode: "changelog" },
+  { n: "Statusseite", bg: "#f8fafc", fg: "#0f172a", mu: "#64748b", ac: "#22c55e", font: "Inter", mode: "status" },
+  { n: "Abfahrtstafel", bg: "#0a1a3a", fg: "#ffffff", mu: "#9db0d8", ac: "#ffd500", font: "IBM Plex Mono", mode: "departures" },
+  { n: "Hover hebt Zeile", bg: "#f3f1ec", fg: "#1a1a1a", mu: "#8d887d", ac: "#1a1a1a", font: "Space Grotesk", mode: "hover" },
+  { n: "Kompakt, Grotesk", bg: "#fff", fg: "#000", mu: "#999", ac: "#000", font: "Space Grotesk", mode: "compact" },
+  { n: "Dateiliste (Finder)", bg: "#fff", fg: "#222", mu: "#888", ac: "#0a64d8", font: "Inter", mode: "files" },
+];
+function indexTable(v) {
+  const head = `<h1>held0</h1>`;
+  let body = "";
+  const tr = (cells, cls = "") => `<tr class="${cls}">${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
+  if (["table", "zebra", "hover", "compact"].includes(v.mode)) body = `${head}<table class="${v.mode}"><thead><tr><th>Projekt</th><th>Was</th><th>Status</th><th></th></tr></thead><tbody>${P.map(([n, d]) => tr([A(n, `<b>${n}</b>`), `<span class="mu">${d}</span>`, `<span class="live"><i></i>live</span>`, A(n, "↗")])).join("")}</tbody></table>`;
+  if (v.mode === "sheet") body = `<div class="bar">fx &nbsp; <b>held0</b></div><table class="sheet"><thead><tr><th></th><th>A</th><th>B</th><th>C</th></tr></thead><tbody>${tr(["1", "<b>Projekt</b>", "<b>Beschreibung</b>", "<b>Status</b>"])}${P.map(([n, d], i) => tr([String(i + 2), A(n, `<u class="ac">${n}</u>`), d, "TRUE"])).join("")}${[7, 8, 9].map((i) => tr([String(i), "", "", ""])).join("")}</tbody></table>`;
+  if (v.mode === "changelog") body = `${head}${P.map(([n, d], i) => `<div class="cl"><span class="tag">v1.${P.length - i}</span><div>${A(n, `<b>${n}</b>`)} <span class="mu">ist live</span><p class="mu">${d}</p></div></div>`).join("")}`;
+  if (v.mode === "status") body = `<div class="sb"><b>held0</b> · <span class="ac">● Alle Systeme laufen</span></div>${P.map(([n, d]) => `<div class="st"><div>${A(n, `<b>${n}</b>`)}<p class="mu">${d}</p></div><div class="ticks">${Array.from({ length: 40 }, () => "<i></i>").join("")}</div><span class="ac">100 %</span></div>`).join("")}`;
+  if (v.mode === "departures") body = `<div class="dep"><div class="dh"><b>held0</b><span>Abfahrt</span></div><table><thead><tr><th>Zeit</th><th>Ziel</th><th>Info</th><th>Gleis</th></tr></thead><tbody>${P.map(([n, d], i) => tr([`${String(9 + i * 2).padStart(2, "0")}:${["05", "20", "35", "42", "58"][i]}`, A(n, `<b>${n}</b>`), `<span class="mu">${d}</span>`, `<span class="ac">${i + 1}</span>`])).join("")}</tbody></table></div>`;
+  if (v.mode === "files") body = `<div class="win"><div class="wt">📁 held0 — ${P.length} Objekte</div><table class="files"><thead><tr><th>Name</th><th>Art</th><th>Beschreibung</th></tr></thead><tbody>${P.map(([n, d], i) => tr([A(n, `🌐 ${n}`), "Website", `<span class="mu">${d}</span>`], i === 0 ? "sel" : "")).join("")}</tbody></table></div>`;
+  return page(`body{background:${v.bg};color:${v.fg};font-family:"${v.font}",system-ui,sans-serif;min-height:100vh;padding:8vh 5vw 5vw;margin:0}
+h1{font-size:2.6rem;letter-spacing:-.04em;margin:0 0 2rem;font-weight:700}a{text-decoration:none}.mu{color:${v.mu}}.ac{color:${v.ac}}
+table{width:100%;border-collapse:collapse;font-size:.95rem}th{text-align:left;font-weight:500;color:${v.mu};font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;padding:.6rem .5rem;border-bottom:1px solid ${v.fg}}td{padding:.9rem .5rem;border-bottom:1px solid ${v.fg}1f;vertical-align:top}
+.live{color:${v.ac};font-size:.85rem;white-space:nowrap}.live i{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;background:${v.ac};margin-right:.4rem;animation:pulse 2s infinite}@keyframes pulse{50%{opacity:.3}}
+.zebra tbody tr:nth-child(odd){background:#0000000a}.hover tr:hover td{background:${v.fg};color:${v.bg}}.hover tr:hover .mu{color:${v.bg}}.compact td{padding:.35rem .5rem;font-size:.85rem}
+.sheet{font-size:.85rem}.sheet td,.sheet th{border:1px solid #d4d4d4;padding:.3rem .5rem;text-transform:none;letter-spacing:0}.sheet th,.sheet td:first-child{background:#f3f3f3;color:#555;text-align:center;width:2.5rem}.bar{border:1px solid #d4d4d4;padding:.4rem .6rem;font-size:.85rem;margin-bottom:.5rem;color:#555}
+.cl{display:flex;gap:1rem;padding:1.2rem 0;border-left:2px solid ${v.ac}33;padding-left:1.2rem;position:relative}.tag{background:${v.ac};color:#fff;font-size:.75rem;padding:.15rem .5rem;border-radius:99px;height:fit-content}.cl p{margin:.3rem 0 0}
+.sb{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1.5rem}.st{display:grid;grid-template-columns:minmax(12rem,1fr) 2fr auto;gap:1rem;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.2rem;margin-bottom:.7rem}.st p{margin:.2rem 0 0;font-size:.85rem}.ticks{display:flex;gap:2px}.ticks i{flex:1;height:1.6rem;background:${v.ac};border-radius:2px}@media(max-width:640px){.st{grid-template-columns:1fr}}
+.dep{background:${v.bg}}.dh{display:flex;justify-content:space-between;font-size:1.6rem;border-bottom:3px solid ${v.ac};padding-bottom:.6rem;margin-bottom:.5rem}.dep th{color:${v.mu};border-color:${v.mu}}.dep td{border-color:#ffffff22;font-size:1.05rem}
+.win{border:1px solid #ddd;border-radius:10px;overflow:hidden;box-shadow:0 20px 50px -20px #0004}.wt{background:#f1f1f1;padding:.6rem 1rem;font-size:.85rem;color:#555;border-bottom:1px solid #ddd}.files td{border:0;padding:.45rem 1rem}.files th{padding:.45rem 1rem;border-bottom:1px solid #eee}.files .sel td{background:${v.ac};color:#fff}.files .sel .mu{color:#fff}
+.legal{display:block;margin-top:3rem;font-size:.75rem;color:${v.mu};text-decoration:none}`, body + LEGAL);
+}
+
+// ---------- Idee 6: Karten ----------
+const C = [
+  { n: "Schlichte Karten", bg: "#f5f5f4", fg: "#1c1917", card: "#fff", mode: "plain" },
+  { n: "Glas auf Verlauf", bg: "linear-gradient(135deg,#1e1b4b,#7c3aed 50%,#db2777)", fg: "#fff", card: "rgba(255,255,255,.12)", mode: "glass" },
+  { n: "Bento-Raster", bg: "#0b0b0c", fg: "#f4f4f5", card: "#18181b", mode: "bento" },
+  { n: "Pastell", bg: "#fffaf3", fg: "#3b2f2f", card: "", mode: "pastel" },
+  { n: "Umrandet, eckig", bg: "#fff", fg: "#000", card: "#fff", mode: "outline" },
+  { n: "Polaroid", bg: "#e9e4da", fg: "#2b2b2b", card: "#fff", mode: "polaroid" },
+  { n: "Neumorph", bg: "#e6e9ef", fg: "#3a4150", card: "#e6e9ef", mode: "neu" },
+  { n: "Große Initialen", bg: "#111", fg: "#eee", card: "#1b1b1b", mode: "initial" },
+  { n: "Gestapelt, schräg", bg: "#f0ede6", fg: "#111", card: "#fff", mode: "stacked" },
+  { n: "App-Icons", bg: "#f2f2f7", fg: "#111", card: "", mode: "icons" },
+];
+const COL = ["#ff6b6b", "#4dabf7", "#51cf66", "#fcc419", "#9775fa"];
+const PAS = ["#ffd8d8", "#d0ebff", "#d3f9d8", "#fff3bf", "#e5dbff"];
+function cards(v) {
+  let body = "";
+  const card = ([n, d], i, extra = "") => `<a class="card ${extra}" href="https://${n}" target="_blank" style="--c:${COL[i]};--p:${PAS[i]}"><span class="ini">${n[0].toUpperCase()}</span><b>${n}</b><p>${d}</p><span class="go">↗</span></a>`;
+  if (v.mode === "icons") body = `<h1>held0</h1><div class="icons">${P.map(([n], i) => `<a href="https://${n}" target="_blank"><span style="background:${COL[i]}">${n[0].toUpperCase()}</span><small>${n.split(".")[0]}</small></a>`).join("")}</div><div class="list">${P.map(([n, d]) => `<p><b>${n}</b> – ${d}</p>`).join("")}</div>`;
+  else body = `<h1>held0</h1><div class="grid ${v.mode}">${P.map((p, i) => card(p, i, v.mode === "bento" && i === 0 ? "wide" : "")).join("")}</div>`;
+  return page(`body{background:${v.bg};color:${v.fg};font-family:"Bricolage Grotesque",Inter,sans-serif;min-height:100vh;padding:8vh 5vw;margin:0}
+h1{font-size:clamp(3rem,9vw,5.5rem);letter-spacing:-.05em;margin:0 0 2.5rem;font-weight:800}a{text-decoration:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:1rem}.card{position:relative;display:flex;flex-direction:column;gap:.3rem;padding:1.4rem;border-radius:18px;background:${v.card};transition:transform .2s,box-shadow .2s;min-height:11rem}.card:hover{transform:translateY(-4px)}
+.card b{font-size:1.2rem;margin-top:auto}.card p{margin:0;opacity:.7;font-size:.92rem}.ini{width:2.6rem;height:2.6rem;border-radius:12px;display:grid;place-items:center;background:var(--c);color:#fff;font-weight:800;font-size:1.2rem}.go{position:absolute;top:1.2rem;right:1.2rem;opacity:.4}
+.plain .card{box-shadow:0 1px 2px #0001,0 8px 24px -12px #0002}
+.glass .card{backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.25)}.glass .ini{background:rgba(255,255,255,.2)}
+.bento{grid-template-columns:repeat(auto-fill,minmax(13rem,1fr))}.bento .wide{grid-column:span 2;grid-row:span 2;background:linear-gradient(135deg,#27272a,#3f3f46)}.bento .wide b{font-size:2.2rem}@media(max-width:640px){.bento .wide{grid-column:auto;grid-row:auto}}
+.pastel .card{background:var(--p);border-radius:28px}.pastel .ini{background:#fff8;color:#3b2f2f}
+.outline .card{border:2px solid #000;border-radius:0;box-shadow:6px 6px 0 #000}.outline .card:hover{box-shadow:2px 2px 0 #000;transform:translate(4px,4px)}.outline .ini{border-radius:0;background:#000}
+.polaroid .card{border-radius:2px;padding:.8rem .8rem 1.4rem;box-shadow:0 10px 25px -10px #0005}.polaroid .card:nth-child(odd){transform:rotate(-2deg)}.polaroid .card:nth-child(even){transform:rotate(2deg)}.polaroid .ini{width:100%;height:8rem;border-radius:0;font-size:3rem}.polaroid b{font-family:Caveat,cursive;font-size:1.6rem}
+.neu .card{box-shadow:8px 8px 18px #c3c8d1,-8px -8px 18px #ffffff}.neu .ini{background:#e6e9ef;color:var(--c);box-shadow:inset 3px 3px 6px #c3c8d1,inset -3px -3px 6px #fff}
+.initial .card{overflow:hidden}.initial .ini{position:absolute;right:-1rem;bottom:-2.5rem;width:auto;height:auto;background:none;color:var(--c);font-size:9rem;opacity:.25}.initial b,.initial p{position:relative}
+.stacked{grid-template-columns:1fr;max-width:34rem}.stacked .card{margin-top:-2.5rem;box-shadow:0 -8px 20px -10px #0003;border:1px solid #0001}.stacked .card:first-child{margin-top:0}.stacked .card:nth-child(odd){transform:rotate(-1.5deg)}.stacked .card:nth-child(even){transform:rotate(1.5deg)}.stacked .card:hover{transform:translateY(-1.5rem);z-index:2}
+.icons{display:flex;gap:1.4rem;flex-wrap:wrap}.icons a{display:flex;flex-direction:column;align-items:center;gap:.4rem}.icons span{width:4.2rem;height:4.2rem;border-radius:22%;display:grid;place-items:center;color:#fff;font-size:1.8rem;font-weight:800;box-shadow:0 6px 16px -6px #0006}.icons small{font-size:.75rem}.list{margin-top:2.5rem;font-size:.9rem;opacity:.75}
+.legal{display:block;margin-top:3rem;font-size:.75rem;opacity:.6;text-decoration:none}`, body + LEGAL);
+}
+
+// ---------- Idee 7: Große Schrift, Bewegung ----------
+const K = [
+  { n: "Liste in Riesenschrift", bg: "#0a0a0a", fg: "#f5f5f5", ac: "#c6ff00", mode: "big" },
+  { n: "Laufband", bg: "#f5f5f0", fg: "#111", ac: "#ff3d00", mode: "marquee" },
+  { n: "Umriss → Füllung", bg: "#111", fg: "#fff", ac: "#fff", mode: "stroke" },
+  { n: "Verlaufsschrift", bg: "#050505", fg: "#fff", ac: "#fff", mode: "gradient" },
+  { n: "Gegenläufige Bänder", bg: "#ffde00", fg: "#000", ac: "#000", mode: "bands" },
+  { n: "Schmal & hoch (Anton)", bg: "#e8e3d9", fg: "#151515", ac: "#d62828", mode: "condensed" },
+  { n: "Breit (Unbounded)", bg: "#0d1b2a", fg: "#e0e1dd", ac: "#ffb703", mode: "wide" },
+  { n: "Ticker oben, Liste unten", bg: "#fff", fg: "#000", ac: "#0047ff", mode: "ticker" },
+  { n: "Hover zeigt Beschreibung groß", bg: "#141414", fg: "#555", ac: "#fff", mode: "reveal" },
+  { n: "Syne, verspielt", bg: "#f7f0ff", fg: "#2b0a57", ac: "#ff4fa3", mode: "syne" },
+];
+function kinetic(v) {
+  const fam = { condensed: "Anton", wide: "Unbounded", syne: "Syne" }[v.mode] || "Archivo";
+  let body = "";
+  const mq = (t, dir = 1, cls = "") => `<div class="mq ${cls}"><div style="animation-direction:${dir > 0 ? "normal" : "reverse"}">${(t + " ").repeat(6)}</div></div>`;
+  if (["big", "stroke", "gradient", "condensed", "wide", "syne"].includes(v.mode)) body = `<p class="small">held0 — Projekte</p>${P.map(([n, d]) => `<div class="it">${A(n)}<span>${d}</span></div>`).join("")}`;
+  if (v.mode === "marquee") body = `<p class="small">held0 — Projekte</p>${P.map(([n, d], i) => `<a class="mql" href="https://${n}" target="_blank">${mq(`${n} <em>✦ ${d} ✦</em>`, i % 2 ? -1 : 1)}</a>`).join("")}`;
+  if (v.mode === "bands") body = `${mq("HELD0 ✦ HELD0 ✦ HELD0 ✦", 1, "band")}${P.map(([n, d]) => `<div class="it">${A(n)}<span>${d}</span></div>`).join("")}${mq("LIVE ✦ LIVE ✦ LIVE ✦", -1, "band")}`;
+  if (v.mode === "ticker") body = `${mq(P.map(([n]) => `${n} ●`).join(" "), 1, "tick")}<h1>held0</h1>${P.map(([n, d]) => `<div class="tl">${A(n)}<span>${d}</span></div>`).join("")}`;
+  if (v.mode === "reveal") body = `<p class="small">held0</p><div class="rv">${P.map(([n, d]) => `<div class="it">${A(n)}<span>${d}</span></div>`).join("")}</div>`;
+  return page(`body{background:${v.bg};color:${v.fg};font-family:"${fam}",sans-serif;min-height:100vh;margin:0;padding:6vh 4vw;overflow-x:hidden}
+a{text-decoration:none}.small{font-family:Inter,sans-serif;font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;opacity:.7;margin:0 0 2rem}
+.it{display:flex;align-items:baseline;gap:1.5rem;flex-wrap:wrap;border-bottom:1px solid ${v.fg}22;padding:.2rem 0}.it a{font-size:clamp(2.4rem,9vw,7rem);font-weight:900;letter-spacing:-.04em;line-height:1.05;transition:color .2s,transform .3s}.it span{font-family:Inter,sans-serif;font-size:.95rem;opacity:.6;max-width:16rem}.it:hover a{color:${v.ac};transform:translateX(1rem)}
+${v.mode === "stroke" ? `.it a{color:transparent;-webkit-text-stroke:1.5px ${v.fg}}.it:hover a{color:${v.fg}}` : ""}
+${v.mode === "gradient" ? `.it a{background:linear-gradient(90deg,#ff3cac,#784ba0,#2b86c5,#00e0c7);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200%;animation:gr 6s linear infinite}@keyframes gr{to{background-position:200%}}` : ""}
+${v.mode === "condensed" ? `.it a{font-weight:400;text-transform:uppercase;font-size:clamp(3rem,13vw,10rem);letter-spacing:0;line-height:.95}` : ""}
+${v.mode === "wide" ? `.it a{font-size:clamp(1.6rem,6vw,4.6rem);font-weight:700;letter-spacing:-.02em}` : ""}
+${v.mode === "syne" ? `.it a{font-weight:800;font-size:clamp(2.2rem,8vw,6rem)}.it:nth-child(even) a{font-style:italic}.it:hover a{transform:rotate(-2deg) translateX(1rem)}` : ""}
+.mq{overflow:hidden;white-space:nowrap}.mq>div{display:inline-block;animation:mq 22s linear infinite}@keyframes mq{to{transform:translateX(-50%)}}
+.mql{display:block;font-size:clamp(2.4rem,8vw,6rem);font-weight:900;border-bottom:2px solid ${v.fg};padding:.4rem 0}.mql em{font-style:normal;font-family:Inter;font-size:.3em;font-weight:500;vertical-align:middle;color:${v.ac}}.mql:hover{background:${v.ac};color:#fff}.mql:hover em{color:#fff}
+.band{background:#000;color:${v.bg};font-size:clamp(2rem,6vw,4rem);font-weight:900;padding:.4rem 0;margin:0 -4vw 1rem;transform:rotate(-2deg)}.band:last-of-type{transform:rotate(2deg);margin-top:2rem}
+.tick{background:${v.ac};color:#fff;margin:-6vh -4vw 3rem;padding:.6rem 0;font-family:"IBM Plex Mono",monospace;font-size:.9rem}h1{font-size:clamp(4rem,14vw,10rem);margin:0 0 2rem;letter-spacing:-.06em;line-height:.9}.tl{display:flex;justify-content:space-between;gap:1rem;font-size:clamp(1.3rem,3vw,2rem);font-weight:800;padding:.7rem 0;border-top:2px solid #000;flex-wrap:wrap}.tl span{font-family:Inter;font-weight:400;font-size:.95rem;opacity:.6}.tl:hover a{color:${v.ac}}
+.rv .it span{position:fixed;right:4vw;bottom:8vh;font-size:clamp(1.4rem,3vw,2.4rem);max-width:22rem;opacity:0;color:${v.ac};transition:opacity .3s;font-family:Inter;text-align:right}.rv .it:hover span{opacity:1}.rv:hover .it a{color:#333}.rv .it:hover a{color:${v.ac}}
+.legal{display:block;margin-top:3rem;font-family:Inter,sans-serif;font-size:.75rem;opacity:.6;text-decoration:none}`, body + LEGAL);
+}
+
+// ---------- Idee 8: Retro-Betriebssystem ----------
+const R = [
+  { n: "Mac OS Classic", mode: "mac" },
+  { n: "Windows 95", mode: "win95" },
+  { n: "Terminal-Fenster (macOS)", mode: "macterm" },
+  { n: "DOS, blau", mode: "dos" },
+  { n: "Desktop mit Icons", mode: "desktop" },
+  { n: "Pixel (8-Bit)", mode: "pixel" },
+  { n: "Amiga Workbench", mode: "amiga" },
+  { n: "Handy-Homescreen", mode: "home" },
+  { n: "Browser im Browser", mode: "browser" },
+  { n: "Teletext / Videotext", mode: "teletext" },
+];
+function retro(v) {
+  const m = v.mode;
+  const items = P.map(([n, d]) => `<li>${A(n)}<span> — ${d}</span></li>`).join("");
+  if (m === "mac") return page(`body{background:#a8a8a8 repeating-conic-gradient(#999 0 25%,#b3b3b3 0 50%) 0 0/4px 4px;min-height:100vh;display:grid;place-items:center;margin:0;font-family:Chicago,Charcoal,"Space Mono",monospace;padding:20px}.w{background:#fff;border:2px solid #000;box-shadow:3px 3px 0 #000;width:min(36rem,100%)}.t{border-bottom:2px solid #000;padding:.25rem;text-align:center;font-weight:700;background:repeating-linear-gradient(#fff 0 1px,#000 1px 2px);}.t span{background:#fff;padding:0 .6rem}ul{list-style:none;margin:0;padding:1rem 1.2rem}li{padding:.45rem 0;border-bottom:1px dotted #000}a{font-weight:700;text-decoration:none}a:hover{background:#000;color:#fff}li span{font-size:.85rem}.legal{display:block;padding:0 1.2rem 1rem;font-size:.75rem}`, `<div class="w"><div class="t"><span>held0</span></div><ul>${items}</ul>${LEGAL}</div>`);
+  if (m === "win95") return page(`body{background:#008080;min-height:100vh;margin:0;font-family:"MS Sans Serif",Tahoma,sans-serif;padding:20px;display:grid;place-items:center}.w{background:#c0c0c0;border:2px solid;border-color:#fff #000 #000 #fff;width:min(36rem,100%);padding:3px}.t{background:linear-gradient(90deg,#000080,#1084d0);color:#fff;font-weight:700;padding:.25rem .4rem;display:flex;justify-content:space-between;font-size:.85rem}.t i{background:#c0c0c0;color:#000;border:1px solid;border-color:#fff #000 #000 #fff;width:1.1rem;text-align:center;font-style:normal}.c{background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;margin:.4rem;padding:.6rem}ul{list-style:none;margin:0;padding:0}li{padding:.3rem;font-size:.9rem}li:hover{background:#000080;color:#fff}a{text-decoration:none;font-weight:700}.legal{font-size:.75rem;display:block;padding:.2rem .5rem}.st{border:1px solid;border-color:#808080 #fff #fff #808080;margin:.2rem .4rem;padding:.1rem .4rem;font-size:.75rem}`, `<div class="w"><div class="t">📁 held0 – Projekte<span><i>_</i> <i>□</i> <i>×</i></span></div><div class="c"><ul>${P.map(([n, d]) => `<li>🌐 ${A(n)} <span style="font-weight:400">— ${d}</span></li>`).join("")}</ul></div><div class="st">${P.length} Objekt(e) · ${LEGAL}</div></div>`);
+  if (m === "macterm") return page(`body{background:linear-gradient(135deg,#5b7cfa,#c471ed);min-height:100vh;margin:0;display:grid;place-items:center;padding:20px;font-family:"JetBrains Mono",monospace}.w{background:#1d1f21ee;border-radius:12px;width:min(42rem,100%);box-shadow:0 30px 60px -20px #0008;color:#c5c8c6;overflow:hidden}.t{background:#2d2f31;padding:.6rem .8rem;display:flex;gap:.45rem;align-items:center;font-size:.75rem;color:#888}.t i{width:.75rem;height:.75rem;border-radius:50%;display:inline-block}.c{padding:1.2rem;font-size:.9rem;line-height:1.8}.g{color:#b5bd68}.b{color:#81a2be}a{text-decoration:none;color:#81a2be}.mu{color:#707880}.legal{color:#707880;font-size:.75rem;text-decoration:none}`, `<div class="w"><div class="t"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span style="margin-left:auto;margin-right:auto">niklas — held0 — zsh</span></div><div class="c"><span class="g">➜</span> <span class="b">held0</span> open projekte<br>${P.map(([n, d]) => `&nbsp;&nbsp;${A(n)} <span class="mu">${d}</span>`).join("<br>")}<br><span class="g">➜</span> <span class="b">held0</span> ${LEGAL}</div></div>`);
+  if (m === "dos") return page(`body{background:#0000aa;color:#fff;font-family:VT323,monospace;font-size:1.4rem;min-height:100vh;margin:0;padding:2rem}.b{border:4px double #fff;padding:1rem 1.4rem;max-width:44rem}h1{background:#aaa;color:#0000aa;font-size:1.4rem;margin:-1rem -1.4rem 1rem;padding:.1rem 1rem;font-weight:400;text-align:center}a{color:#ffff55;text-decoration:none}a:hover{background:#ffff55;color:#0000aa}.mu{color:#aaa}.f{background:#00aaaa;color:#000;margin-top:2rem;padding:.1rem .6rem;max-width:44rem}.f a{color:#000}`, `<div class="b"><h1>HELD0.EXE</h1>${P.map(([n, d], i) => `<p>${i + 1}. ${A(n, n.toUpperCase())} <span class="mu">${d}</span></p>`).join("")}<p>Auswahl: _</p></div><div class="f">F1 Hilfe · ${LEGAL}</div>`);
+  if (m === "desktop") return page(`body{background:linear-gradient(160deg,#3a7bd5,#00d2ff);min-height:100vh;margin:0;font-family:Inter,sans-serif;padding:24px;color:#fff}.icons{display:grid;grid-template-columns:repeat(auto-fill,6.5rem);gap:1.6rem}.ic{display:flex;flex-direction:column;align-items:center;text-align:center;font-size:.78rem;text-decoration:none;text-shadow:0 1px 3px #0008}.ic span{width:3.6rem;height:3.6rem;background:#fff;border-radius:14px;display:grid;place-items:center;font-size:1.8rem;margin-bottom:.4rem;box-shadow:0 6px 14px -6px #0007}.ic:hover span{outline:3px solid #fff8}.bar{position:fixed;bottom:0;left:0;right:0;background:#0006;backdrop-filter:blur(10px);padding:.4rem 1rem;font-size:.8rem;display:flex;justify-content:space-between}.legal{color:#fff;text-decoration:none}h1{position:fixed;right:2rem;bottom:3rem;margin:0;font-size:4rem;opacity:.35;letter-spacing:-.05em}`, `<div class="icons">${P.map(([n, d], i) => `<a class="ic" href="https://${n}" target="_blank" title="${d}"><span>${["🎬", "🏢", "🚆", "🎤", "🕵️"][i]}</span>${n}</a>`).join("")}</div><h1>held0</h1><div class="bar"><b>held0</b>${LEGAL}</div>`);
+  if (m === "pixel") return page(`body{background:#212529;color:#f8f9fa;font-family:"Press Start 2P",monospace;min-height:100vh;margin:0;padding:6vh 24px;font-size:.7rem;line-height:2}h1{font-size:2rem;color:#ffd43b;text-shadow:4px 4px 0 #e8590c;margin:0 0 2rem}.l{border:4px solid #f8f9fa;padding:1rem;max-width:40rem;box-shadow:8px 8px 0 #495057}.l p{margin:0 0 1rem}a{color:#69db7c;text-decoration:none}a:hover::before{content:"▶ "}.mu{color:#adb5bd}.legal{display:block;margin-top:2rem;color:#adb5bd;font-size:.55rem}`, `<h1>HELD0</h1><div class="l">${P.map(([n, d]) => `<p>${A(n)}<br><span class="mu">${d}</span></p>`).join("")}</div>${LEGAL}`);
+  if (m === "amiga") return page(`body{background:#0055aa;min-height:100vh;margin:0;font-family:"Space Mono",monospace;color:#fff;padding:0}.top{background:#fff;color:#0055aa;padding:.2rem .6rem;font-weight:700;font-size:.85rem;display:flex;justify-content:space-between}.w{margin:2rem;border:2px solid #fff;background:#0055aa;max-width:38rem}.wt{background:#ff8800;color:#000;padding:.1rem .5rem;font-weight:700;font-size:.85rem}.c{padding:1rem}a{color:#fff;text-decoration:none;font-weight:700}a:hover{background:#ff8800;color:#000}.mu{color:#aaccff}.legal{color:#fff;font-size:.75rem}`, `<div class="top"><span>held0 Workbench</span>${LEGAL}</div><div class="w"><div class="wt">Projekte</div><div class="c">${P.map(([n, d]) => `<p>${A(n)}<br><span class="mu">${d}</span></p>`).join("")}</div></div>`);
+  if (m === "home") return page(`body{background:radial-gradient(circle at 30% 20%,#ffb3c7,#7f7fd5 50%,#2b2d6e);min-height:100vh;margin:0;font-family:-apple-system,Inter,sans-serif;color:#fff;padding:3rem 1.5rem;display:flex;flex-direction:column;align-items:center}.time{font-size:4.5rem;font-weight:300;margin:0}.date{opacity:.8;margin:0 0 3rem}.apps{display:grid;grid-template-columns:repeat(4,4.4rem);gap:1.6rem 1.2rem}.app{display:flex;flex-direction:column;align-items:center;font-size:.7rem;text-decoration:none;gap:.35rem}.app span{width:4rem;height:4rem;border-radius:22%;display:grid;place-items:center;font-size:1.8rem;background:#fff;color:#222;box-shadow:0 6px 16px -6px #0006}.dock{margin-top:auto;background:#ffffff33;backdrop-filter:blur(20px);border-radius:28px;padding:.8rem 1.2rem;font-size:.75rem}.legal{color:#fff;text-decoration:none}`, `<p class="time">held0</p><p class="date">${P.length} Apps · alle live</p><div class="apps">${P.map(([n], i) => `<a class="app" href="https://${n}" target="_blank"><span style="background:${COL[i]};color:#fff">${["🎬", "🏢", "🚆", "🎤", "🕵️"][i]}</span>${n.split(".")[0]}</a>`).join("")}</div><div class="dock">${LEGAL}</div>`);
+  if (m === "browser") return page(`body{background:#e5e5e5;min-height:100vh;margin:0;padding:3vh 3vw;font-family:Inter,sans-serif}.w{background:#fff;border-radius:12px;box-shadow:0 20px 50px -20px #0005;overflow:hidden;max-width:60rem;margin:auto}.tabs{display:flex;gap:2px;background:#dedede;padding:.5rem .5rem 0;overflow-x:auto}.tab{background:#ececec;border-radius:8px 8px 0 0;padding:.45rem .9rem;font-size:.75rem;white-space:nowrap;text-decoration:none;color:#333}.tab.on{background:#fff}.url{padding:.5rem 1rem;border-bottom:1px solid #eee}.url span{display:block;background:#f1f1f1;border-radius:99px;padding:.35rem 1rem;font-size:.8rem;color:#555}.c{padding:3rem 2rem;font-family:"JetBrains Mono",monospace}h1{font-size:3rem;margin:0 0 2rem;letter-spacing:-.04em}.c p{margin:0 0 1.2rem}.c a{text-decoration:none;font-weight:600}.mu{color:#888;font-size:.85rem}.legal{font-size:.75rem;color:#888}`, `<div class="w"><div class="tabs"><span class="tab on">held0</span>${P.map(([n]) => A(n, n, "tab")).join("")}</div><div class="url"><span>🔒 held0.com</span></div><div class="c"><h1>held0_</h1>${P.map(([n, d]) => `<p>${A(n)}<br><span class="mu">${d}</span></p>`).join("")}${LEGAL}</div></div>`);
+  return page(`body{background:#000;color:#fff;font-family:VT323,monospace;font-size:1.5rem;min-height:100vh;margin:0;padding:2rem;max-width:44rem}.h{display:flex;justify-content:space-between;color:#ffff00}.big{background:#0000ff;color:#ffff00;font-size:3rem;padding:.2rem 1rem;margin:1rem 0}.r{display:flex;gap:1rem}.r b{color:#00ffff;width:3rem}a{color:#00ff00;text-decoration:none}.mu{color:#ff00ff}.f{background:#ff0000;color:#fff;padding:0 .5rem;margin-top:2rem}.f a{color:#fff}`, `<div class="h"><span>P100</span><span>held0text</span><span>${new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</span></div><div class="big">HELD0 PROJEKTE</div>${P.map(([n, d], i) => `<div class="r"><b>${101 + i}</b><div>${A(n)}<br><span class="mu">${d}</span></div></div>`).join("")}<div class="f">199 ${LEGAL}</div>`);
+}
+
+// ---------- Idee 9: Verspielt / räumlich ----------
+const G = [
+  { n: "Umlaufbahn", mode: "orbit" },
+  { n: "Sternbild", mode: "stars" },
+  { n: "U-Bahn-Plan", mode: "metro" },
+  { n: "Verstreute Sticker", mode: "stickers" },
+  { n: "Blasen", mode: "bubbles" },
+  { n: "Zeitleiste", mode: "timeline" },
+  { n: "Treppe", mode: "stairs" },
+  { n: "Kreistext", mode: "circle" },
+  { n: "Landkarte mit Pins", mode: "map" },
+  { n: "Bahnticket", mode: "ticket" },
+];
+function playful(v) {
+  const m = v.mode;
+  if (m === "orbit") return page(`body{background:#05060f;color:#fff;font-family:"Space Grotesk",sans-serif;min-height:100vh;margin:0;display:grid;place-items:center;overflow:hidden}.sys{position:relative;width:min(90vw,40rem);aspect-ratio:1}.sun{position:absolute;inset:40%;border-radius:50%;background:radial-gradient(#fff6c2,#ffb703);display:grid;place-items:center;color:#05060f;font-weight:700;box-shadow:0 0 60px #ffb70388}.o{position:absolute;inset:var(--i);border:1px solid #ffffff1c;border-radius:50%;animation:spin var(--t) linear infinite}.o a{position:absolute;top:-.7rem;left:50%;transform:translateX(-50%);white-space:nowrap;background:#ffffff14;border:1px solid #ffffff33;padding:.25rem .7rem;border-radius:99px;font-size:.8rem;text-decoration:none;animation:spin var(--t) linear infinite reverse}.o a:hover{background:#fff;color:#000}@keyframes spin{to{transform:rotate(360deg)}}.o a{transform-origin:center}.legal{position:fixed;bottom:1rem;font-size:.7rem;opacity:.5;text-decoration:none}`, `<div class="sys"><div class="sun">held0</div>${P.map(([n, d], i) => `<div class="o" style="--i:${32 - i * 7}%;--t:${30 + i * 12}s">${A(n, n, "")}</div>`).join("")}</div>${LEGAL}`);
+  if (m === "stars") { const pts = [[18, 30], [38, 18], [60, 34], [74, 60], [44, 70]]; return page(`body{background:radial-gradient(#13173a,#04050d);color:#dfe6ff;font-family:"Space Grotesk",sans-serif;min-height:100vh;margin:0;position:relative;overflow:hidden}svg{position:absolute;inset:0;width:100%;height:100%}.s{position:absolute;transform:translate(-50%,-50%);text-align:center;text-decoration:none}.s i{display:block;width:10px;height:10px;border-radius:50%;background:#fff;margin:0 auto .4rem;box-shadow:0 0 14px #fff}.s small{display:block;opacity:.55;font-size:.72rem;max-width:11rem}.s:hover i{box-shadow:0 0 28px 6px #9ecbff}h1{position:absolute;left:5vw;bottom:5vh;margin:0;font-weight:300;letter-spacing:.3em;font-size:1rem}.legal{position:absolute;right:5vw;bottom:5vh;font-size:.7rem;opacity:.5;text-decoration:none}.bg{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 80%,#fff8,transparent),radial-gradient(1px 1px at 80% 20%,#fff8,transparent),radial-gradient(1px 1px at 50% 50%,#fff6,transparent),radial-gradient(1px 1px at 90% 90%,#fff6,transparent),radial-gradient(1px 1px at 10% 10%,#fff6,transparent);}`, `<div class="bg"></div><svg>${pts.slice(1).map((p, i) => `<line x1="${pts[i][0]}%" y1="${pts[i][1]}%" x2="${p[0]}%" y2="${p[1]}%" stroke="#ffffff40" stroke-dasharray="3 5"/>`).join("")}</svg>${P.map(([n, d], i) => `<a class="s" href="https://${n}" target="_blank" style="left:${pts[i][0]}%;top:${pts[i][1]}%"><i></i>${n}<small>${d}</small></a>`).join("")}<h1>HELD0</h1>${LEGAL}`); }
+  if (m === "metro") return page(`body{background:#fff;color:#111;font-family:Inter,sans-serif;min-height:100vh;margin:0;padding:8vh 6vw}h1{font-size:1rem;margin:0 0 3rem;display:flex;align-items:center;gap:.6rem}h1 b{background:#0065ae;color:#fff;padding:.15rem .5rem;border-radius:4px}.line{position:relative;padding-left:3rem}.line::before{content:"";position:absolute;left:1rem;top:.5rem;bottom:.5rem;width:10px;background:#e3000f;border-radius:5px}.st{position:relative;margin:0 0 2.4rem}.st::before{content:"";position:absolute;left:-2.35rem;top:.15rem;width:14px;height:14px;border:4px solid #111;background:#fff;border-radius:50%}.st a{font-weight:700;font-size:1.3rem;text-decoration:none}.st p{margin:.2rem 0 0;color:#666;font-size:.9rem}.st:hover::before{background:#e3000f}.legal{font-size:.75rem;color:#888;text-decoration:none}`, `<h1><b>U0</b> Linie held0</h1><div class="line">${P.map(([n, d]) => `<div class="st">${A(n)}<p>${d}</p></div>`).join("")}</div>${LEGAL}`);
+  if (m === "stickers") { const pos = [[8, 18, -8], [52, 12, 6], [20, 52, 4], [60, 48, -5], [34, 76, 9]]; return page(`body{background:#f4efe4;font-family:"Bricolage Grotesque",sans-serif;min-height:100vh;margin:0;position:relative;overflow:hidden}h1{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-size:clamp(5rem,22vw,16rem);margin:0;color:#e6dfcf;letter-spacing:-.06em}.st{position:absolute;padding:.9rem 1.2rem;border-radius:16px;text-decoration:none;box-shadow:0 10px 20px -10px #0006;max-width:15rem;transition:transform .2s;border:3px solid #fff}.st b{display:block;font-size:1.15rem}.st small{font-size:.8rem}.st:hover{transform:rotate(0) scale(1.08)!important;z-index:2}.legal{position:absolute;bottom:1rem;left:1rem;font-size:.75rem;color:#888;text-decoration:none}`, `<h1>held0</h1>${P.map(([n, d], i) => `<a class="st" href="https://${n}" target="_blank" style="left:${pos[i][0]}%;top:${pos[i][1]}%;transform:rotate(${pos[i][2]}deg);background:${PAS[i]}"><b>${n}</b><small>${d}</small></a>`).join("")}${LEGAL}`); }
+  if (m === "bubbles") return page(`body{background:#0f172a;color:#fff;font-family:"Space Grotesk",sans-serif;min-height:100vh;margin:0;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:1.5rem;padding:2rem}.b{border-radius:50%;display:grid;place-items:center;text-align:center;padding:1.5rem;text-decoration:none;animation:fl 6s ease-in-out infinite;box-shadow:inset 0 -10px 30px #0003}.b small{display:block;font-size:.72rem;opacity:.85;max-width:9rem;margin:.3rem auto 0}@keyframes fl{50%{transform:translateY(-14px)}}h1{width:100%;text-align:center;margin:0 0 1rem;font-weight:300;letter-spacing:.3em}.legal{width:100%;text-align:center;font-size:.7rem;opacity:.5;text-decoration:none}`, `<h1>HELD0</h1>${P.map(([n, d], i) => `<a class="b" href="https://${n}" target="_blank" style="background:${COL[i]};width:${[13, 11, 12, 10.5, 11.5][i]}rem;height:${[13, 11, 12, 10.5, 11.5][i]}rem;animation-delay:-${i}s"><div><b>${n}</b><small>${d}</small></div></a>`).join("")}${LEGAL}`);
+  if (m === "timeline") return page(`body{background:#fafaf9;color:#1c1917;font-family:Inter,sans-serif;min-height:100vh;margin:0;padding:8vh 6vw}h1{font-size:3rem;letter-spacing:-.05em;margin:0 0 3rem}.tl{display:flex;gap:0;overflow-x:auto;padding-bottom:1rem;border-top:3px solid #1c1917;padding-top:0}.ev{min-width:13rem;padding:1.4rem 1.4rem 0 0;position:relative}.ev::before{content:"";position:absolute;top:-.6rem;left:0;width:1rem;height:1rem;border-radius:50%;background:#f97316;border:3px solid #fafaf9}.ev small{color:#a8a29e;font-size:.75rem}.ev a{display:block;font-weight:700;font-size:1.1rem;text-decoration:none;margin:.3rem 0}.ev p{margin:0;color:#78716c;font-size:.88rem}.legal{display:block;margin-top:3rem;font-size:.75rem;color:#a8a29e;text-decoration:none}`, `<h1>held0</h1><div class="tl">${P.map(([n, d], i) => `<div class="ev"><small>Projekt ${i + 1}</small>${A(n)}<p>${d}</p></div>`).join("")}</div>${LEGAL}`);
+  if (m === "stairs") return page(`body{background:#111;color:#eee;font-family:"Syne",sans-serif;min-height:100vh;margin:0;padding:6vh 4vw}h1{font-size:1rem;letter-spacing:.3em;margin:0 0 2rem;color:#777}.s{display:block;text-decoration:none;font-size:clamp(1.6rem,5vw,3.6rem);font-weight:800;padding:.4rem 0;border-bottom:1px solid #333;transition:color .2s}.s small{font-family:Inter;font-size:.85rem;font-weight:400;color:#777;margin-left:1rem}.s:hover{color:#a3e635}.legal{display:block;margin-top:2rem;font-family:Inter;font-size:.75rem;color:#666;text-decoration:none}`, `<h1>HELD0</h1>${P.map(([n, d], i) => `<a class="s" href="https://${n}" target="_blank" style="margin-left:${i * 8}%">${n}<small>${d}</small></a>`).join("")}${LEGAL}`);
+  if (m === "circle") return page(`body{background:#f0e9df;color:#2b2118;font-family:"Space Grotesk",sans-serif;min-height:100vh;margin:0;display:grid;place-items:center;padding:2rem}.w{position:relative;width:min(80vw,30rem);aspect-ratio:1}svg{position:absolute;inset:0;animation:rot 40s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}.c{position:absolute;inset:18%;display:flex;flex-direction:column;justify-content:center;gap:.6rem;text-align:center}.c a{font-weight:700;text-decoration:none}.c a:hover{color:#c2410c}.legal{position:fixed;bottom:1rem;font-size:.75rem;color:#8b7b6b;text-decoration:none}`, `<div class="w"><svg viewBox="0 0 200 200"><defs><path id="p" d="M100,100 m-88,0 a88,88 0 1,1 176,0 a88,88 0 1,1 -176,0"/></defs><text font-size="11.5" letter-spacing="2" fill="#2b2118" font-family="Space Mono"><textPath href="#p">HELD0 · PROJEKTE VON NIKLAS HELD · KÖLN · HELD0 · ALLE LIVE ·</textPath></text></svg><div class="c">${P.map(([n]) => A(n)).join("")}</div></div>${LEGAL}`);
+  if (m === "map") { const pos = [[28, 38], [62, 22], [48, 58], [74, 66], [22, 72]]; return page(`body{background:#dfe8d8;font-family:Inter,sans-serif;min-height:100vh;margin:0;position:relative;overflow:hidden;background-image:linear-gradient(#c5d4bc 1px,transparent 1px),linear-gradient(90deg,#c5d4bc 1px,transparent 1px);background-size:48px 48px}.river{position:absolute;inset:0;background:radial-gradient(ellipse 30% 120% at 70% 50%,transparent 60%,transparent 61%),linear-gradient(100deg,transparent 45%,#a9cbe0 45%,#a9cbe0 50%,transparent 50%)}.pin{position:absolute;transform:translate(-50%,-100%);text-align:center;text-decoration:none;color:#1e293b}.pin i{display:block;width:26px;height:26px;margin:0 auto;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#e11d48;box-shadow:0 4px 8px #0004}.pin b{display:block;background:#fff;padding:.25rem .6rem;border-radius:6px;font-size:.8rem;margin-top:.4rem;box-shadow:0 4px 10px -4px #0005}.pin small{display:none;background:#1e293b;color:#fff;padding:.3rem .6rem;border-radius:6px;font-size:.72rem;margin-top:.3rem;max-width:12rem}.pin:hover small{display:block}h1{position:absolute;top:1.5rem;left:1.5rem;margin:0;background:#fff;padding:.5rem 1rem;border-radius:10px;font-size:1.2rem;box-shadow:0 4px 12px -6px #0005}.legal{position:absolute;bottom:1rem;right:1rem;font-size:.7rem;background:#fff;padding:.2rem .5rem;border-radius:4px;text-decoration:none}`, `<div class="river"></div><h1>📍 held0</h1>${P.map(([n, d], i) => `<a class="pin" href="https://${n}" target="_blank" style="left:${pos[i][0]}%;top:${pos[i][1]}%"><i></i><b>${n}</b><small>${d}</small></a>`).join("")}${LEGAL}`); }
+  return page(`body{background:#e8e2d6;font-family:"IBM Plex Mono",monospace;min-height:100vh;margin:0;display:grid;place-items:center;padding:2rem}.tk{background:#fff;width:min(40rem,100%);border-radius:14px;display:grid;grid-template-columns:1fr 9rem;box-shadow:0 20px 40px -20px #0006;overflow:hidden}.m{padding:1.4rem;border-right:2px dashed #ccc}.h{display:flex;justify-content:space-between;font-size:.7rem;color:#888;text-transform:uppercase}.h b{color:#e3000f}.route{font-size:1.6rem;font-weight:600;margin:.6rem 0 1rem}.m p{margin:.45rem 0;font-size:.85rem}.m a{font-weight:600;text-decoration:none;color:#e3000f}.m span{color:#777}.s{background:#e3000f;color:#fff;padding:1.4rem 1rem;font-size:.75rem;display:flex;flex-direction:column;justify-content:space-between}.s b{font-size:2.2rem}.legal{color:#fff;text-decoration:none;font-size:.65rem}@media(max-width:520px){.tk{grid-template-columns:1fr}.m{border-right:0;border-bottom:2px dashed #ccc}}`, `<div class="tk"><div class="m"><div class="h"><span>Fahrkarte</span><b>held0</b></div><div class="route">Köln → Internet</div>${P.map(([n, d]) => `<p>${A(n)} <span>· ${d}</span></p>`).join("")}</div><div class="s"><span>Klasse</span><b>1</b><span>${P.length} Halte · alle live</span>${LEGAL}</div></div>`);
+}
+
+// ---------- Idee 10: Papier & analog ----------
+const N = [
+  { n: "Kassenbon", mode: "receipt" },
+  { n: "Liniertes Notizbuch", mode: "notebook" },
+  { n: "Haftnotizen", mode: "postits" },
+  { n: "Schreibmaschine", mode: "typewriter" },
+  { n: "Karteikarten", mode: "index" },
+  { n: "Visitenkarte", mode: "bizcard" },
+  { n: "Brief", mode: "letter" },
+  { n: "Kleinanzeigen", mode: "classified" },
+  { n: "Briefmarken", mode: "stamps" },
+  { n: "Bauplan (Blueprint)", mode: "blueprint" },
+];
+function paper(v) {
+  const m = v.mode;
+  if (m === "receipt") return page(`body{background:#d8d4cc;font-family:"Space Mono",monospace;min-height:100vh;margin:0;display:grid;place-items:center;padding:2rem}.r{background:#fffdf7;width:min(22rem,100%);padding:1.6rem 1.4rem 2.2rem;box-shadow:0 10px 30px -10px #0005;font-size:.82rem;color:#222;clip-path:polygon(0 0,100% 0,100% 100%,95% 98%,90% 100%,85% 98%,80% 100%,75% 98%,70% 100%,65% 98%,60% 100%,55% 98%,50% 100%,45% 98%,40% 100%,35% 98%,30% 100%,25% 98%,20% 100%,15% 98%,10% 100%,5% 98%,0 100%)}h1{text-align:center;font-size:1.6rem;margin:0}.c{text-align:center;margin:.2rem 0 1rem}.l{display:flex;justify-content:space-between;gap:.5rem}.l a{font-weight:700;text-decoration:none}.d{color:#777;margin:0 0 .7rem;font-size:.75rem}hr{border:0;border-top:1px dashed #999}.tot{display:flex;justify-content:space-between;font-weight:700;font-size:1rem}.bc{height:40px;margin-top:1rem;background:repeating-linear-gradient(90deg,#222 0 2px,transparent 2px 4px,#222 4px 5px,transparent 5px 8px)}.legal{display:block;text-align:center;margin-top:.8rem;color:#777;text-decoration:none}`, `<div class="r"><h1>HELD0</h1><p class="c">Köln · ${new Date().toLocaleDateString("de-DE")}</p><hr>${P.map(([n, d]) => `<div class="l">${A(n)}<span>0,00 €</span></div><p class="d">${d}</p>`).join("")}<hr><div class="tot"><span>SUMME</span><span>kostenlos</span></div><p class="c">${P.length} Artikel · Vielen Dank!</p><div class="bc"></div>${LEGAL}</div>`);
+  if (m === "notebook") return page(`body{background:#fdfbf4 repeating-linear-gradient(transparent 0 31px,#b6d4f0 31px 32px);font-family:Caveat,cursive;min-height:100vh;margin:0;padding:64px 2rem 2rem 6rem;color:#1d3a8a;font-size:1.6rem;line-height:32px;position:relative}body::before{content:"";position:absolute;left:4.5rem;top:0;bottom:0;width:2px;background:#f19999}h1{font-size:3.2rem;margin:0 0 32px;line-height:64px}p{margin:0 0 32px}a{text-decoration:none;font-weight:700}a:hover{text-decoration:line-through}.mu{color:#5b6fae}.legal{font-size:1.1rem}`, `<h1>held0 ✎</h1>${P.map(([n, d]) => `<p>→ ${A(n)}<br><span class="mu">${d}</span></p>`).join("")}${LEGAL}`);
+  if (m === "postits") return page(`body{background:#8b6b4a url();background:linear-gradient(#a07a52,#8b6b4a);font-family:Caveat,cursive;min-height:100vh;margin:0;padding:3rem 2rem;color:#222}h1{color:#fff;font-size:3rem;margin:0 0 2rem;font-family:"Bricolage Grotesque"}.g{display:flex;flex-wrap:wrap;gap:1.8rem}.n{width:12rem;min-height:12rem;padding:1.2rem 1rem;font-size:1.35rem;box-shadow:0 10px 18px -10px #000a;text-decoration:none;position:relative}.n::before{content:"";position:absolute;top:-10px;left:45%;width:18px;height:18px;border-radius:50%;background:#d00;box-shadow:0 2px 3px #0006}.n b{display:block;font-size:1.6rem;margin-bottom:.4rem}.n:hover{transform:scale(1.05) rotate(0)!important}.legal{display:block;margin-top:2.5rem;color:#fff;font-family:Inter;font-size:.75rem;text-decoration:none}`, `<h1>held0</h1><div class="g">${P.map(([n, d], i) => `<a class="n" href="https://${n}" target="_blank" style="background:${["#fff475", "#ffb3c1", "#a7f3d0", "#bae6fd", "#fed7aa"][i]};transform:rotate(${[-3, 2, -1.5, 3, -2][i]}deg)"><b>${n}</b>${d}</a>`).join("")}</div>${LEGAL}`);
+  if (m === "typewriter") return page(`body{background:#f1ece1;font-family:"Special Elite",monospace;min-height:100vh;margin:0;display:grid;place-items:start center;padding:6vh 1.5rem;color:#2a2622}.s{background:#fffef9;width:min(38rem,100%);padding:3rem 3rem 4rem;box-shadow:0 1px 3px #0002,0 20px 40px -24px #0004;line-height:1.9}h1{font-size:1.8rem;margin:0 0 2rem;font-weight:400;text-decoration:underline}a{text-decoration:none;font-size:1.15rem}a:hover{background:#2a2622;color:#fffef9}p{margin:0 0 1.4rem}.mu{color:#6d665d}.legal{font-size:.85rem}.cur{animation:blink 1s steps(1) infinite}${blink}`, `<div class="s"><h1>held0</h1>${P.map(([n, d]) => `<p>${A(n)}<br><span class="mu">${d}</span></p>`).join("")}<p class="mu">— N. H.<span class="cur">▍</span></p>${LEGAL}</div>`);
+  if (m === "index") return page(`body{background:#3b3b3b;font-family:"Special Elite",monospace;min-height:100vh;margin:0;padding:4rem 2rem;display:flex;flex-direction:column;align-items:center}h1{color:#eee;font-family:"Space Mono";margin:0 0 2rem;font-size:1.2rem;letter-spacing:.3em}.k{background:#fffef6 repeating-linear-gradient(transparent 0 23px,#c9daf0 23px 24px);background-position:0 3.2rem;width:min(30rem,100%);min-height:10rem;padding:.8rem 1.2rem;margin-bottom:-6rem;box-shadow:0 -6px 16px -6px #0008;border-top:3px solid #e55;transition:transform .25s;text-decoration:none;color:#222;position:relative}.k:last-of-type{margin-bottom:2rem}.k:hover{transform:translateY(-3.5rem);z-index:5}.k b{display:block;font-size:1.2rem;margin-bottom:1.2rem}.k span{font-size:.95rem}.legal{color:#aaa;font-family:Inter;font-size:.75rem;text-decoration:none;margin-top:5rem}`, `<h1>HELD0 / KARTEI</h1>${P.map(([n, d]) => `<a class="k" href="https://${n}" target="_blank"><b>${n}</b><span>${d}</span></a>`).join("")}${LEGAL}`);
+  if (m === "bizcard") return page(`body{background:#2a2a2a;font-family:Inter,sans-serif;min-height:100vh;margin:0;display:grid;place-items:center;padding:2rem}.c{background:#f7f5f0;width:min(34rem,100%);aspect-ratio:1.75;padding:1.8rem 2rem;box-shadow:0 30px 60px -20px #000;display:flex;flex-direction:column;justify-content:space-between;border-radius:4px}.t{display:flex;justify-content:space-between;align-items:flex-start}h1{font-family:"Instrument Serif",serif;font-weight:400;font-size:2.4rem;margin:0;line-height:1}.t small{font-size:.7rem;color:#888;text-align:right;line-height:1.5}.l{display:grid;grid-template-columns:1fr 1fr;gap:.2rem 1.5rem;font-size:.78rem}.l a{text-decoration:none;color:#222}.l a:hover{text-decoration:underline}.legal{font-size:.65rem;color:#999!important}@media(max-width:520px){.c{aspect-ratio:auto}.l{grid-template-columns:1fr}}`, `<div class="c"><div class="t"><h1>held0</h1><small>Niklas Held<br>Köln</small></div><div class="l">${P.map(([n]) => A(n)).join("")}${LEGAL}</div></div>`);
+  if (m === "letter") return page(`body{background:#cfc6b6;font-family:"EB Garamond",serif;min-height:100vh;margin:0;display:grid;place-items:start center;padding:5vh 1.5rem}.l{background:#fffdf8;width:min(40rem,100%);padding:4rem 4rem 5rem;box-shadow:0 20px 40px -20px #0006;font-size:1.15rem;line-height:1.65;color:#2a241c}.hd{display:flex;justify-content:space-between;font-size:.85rem;color:#8a7f6e;margin-bottom:3rem}h1{font-family:"Instrument Serif";font-weight:400;font-size:1.9rem;margin:0}a{color:#7a2e12}.sig{font-family:Caveat,cursive;font-size:2.2rem;color:#1d3a8a;margin-top:2rem}.legal{font-size:.8rem;color:#8a7f6e}`, `<div class="l"><div class="hd"><h1>held0</h1><span>Köln, ${new Date().toLocaleDateString("de-DE")}</span></div><p>Hallo,</p><p>schön, dass du vorbeischaust. Woran ich gerade baue und was schon läuft:</p><ul>${P.map(([n, d]) => `<li>${A(n)} – ${d}</li>`).join("")}</ul><p>Viel Spaß beim Ausprobieren!</p><div class="sig">Niklas</div>${LEGAL}</div>`);
+  if (m === "classified") return page(`body{background:#efe9dc;font-family:"Playfair Display",serif;min-height:100vh;margin:0;padding:5vh 4vw;color:#111}.hd{border-top:4px solid #111;border-bottom:1px solid #111;padding:.4rem 0;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:baseline}.hd h1{font-size:2.2rem;margin:0;font-weight:900}.hd span{font-family:"IBM Plex Mono";font-size:.75rem}.g{columns:3 13rem;column-gap:1.2rem;column-rule:1px solid #111}.ad{break-inside:avoid;border:1px solid #111;padding:.8rem;margin-bottom:1.2rem;font-family:"EB Garamond";font-size:.95rem}.ad b{display:block;font-family:"Archivo Black";text-transform:uppercase;font-size:1rem;letter-spacing:.02em}.ad a{text-decoration:none}.ad em{display:block;font-size:.8rem;margin-top:.4rem}.legal{font-family:"IBM Plex Mono";font-size:.7rem}`, `<div class="hd"><h1>Kleinanzeigen</h1><span>held0 · Rubrik: Websites</span></div><div class="g">${P.map(([n, d]) => `<div class="ad">${A(n, `<b>${n}</b>`)}${d}. Kostenlos, sofort verfügbar. <em>Chiffre held0</em></div>`).join("")}<div class="ad">${LEGAL}</div></div>`);
+  if (m === "stamps") return page(`body{background:#f3efe6;font-family:"Space Grotesk",sans-serif;min-height:100vh;margin:0;padding:6vh 4vw}h1{font-size:2.6rem;margin:0 0 2rem;letter-spacing:-.04em}.g{display:flex;flex-wrap:wrap;gap:1.6rem}.st{width:11rem;padding:10px;background:#fff;text-decoration:none;color:#222;filter:drop-shadow(0 6px 8px #0003);-webkit-mask:radial-gradient(circle 6px at 6px 6px,transparent 98%,#000) -6px -6px/16px 16px;mask:radial-gradient(circle 6px at 6px 6px,transparent 98%,#000) -6px -6px/16px 16px}.in{border:1px solid #0002;padding:.9rem;height:13rem;display:flex;flex-direction:column}.in .e{font-size:2.6rem}.in b{margin-top:auto;font-size:.95rem}.in small{font-size:.72rem;opacity:.75}.val{align-self:flex-end;font-weight:700}.legal{display:block;margin-top:2.5rem;font-size:.75rem;color:#888;text-decoration:none}`, `<h1>held0 · Sammlung</h1><div class="g">${P.map(([n, d], i) => `<a class="st" href="https://${n}" target="_blank"><div class="in" style="background:${PAS[i]}"><span class="val">0 ct</span><span class="e">${["🎬", "🏢", "🚆", "🎤", "🕵️"][i]}</span><b>${n}</b><small>${d}</small></div></a>`).join("")}</div>${LEGAL}`);
+  return page(`body{background:#0b3d91;background-image:linear-gradient(#ffffff14 1px,transparent 1px),linear-gradient(90deg,#ffffff14 1px,transparent 1px),linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:80px 80px,80px 80px,16px 16px,16px 16px;color:#e6f0ff;font-family:"IBM Plex Mono",monospace;min-height:100vh;margin:0;padding:6vh 5vw}h1{font-size:3rem;margin:0;font-weight:400;letter-spacing:.1em}.sub{font-size:.75rem;margin:0 0 3rem;opacity:.7}.box{border:1.5px solid #e6f0ff;padding:1rem 1.2rem;margin-bottom:1.2rem;max-width:34rem;position:relative}.box::after{content:attr(data-n);position:absolute;top:-.7rem;right:1rem;background:#0b3d91;padding:0 .4rem;font-size:.7rem}.box a{text-decoration:none;font-size:1.1rem}.box a:hover{text-decoration:underline}.box p{margin:.3rem 0 0;font-size:.8rem;opacity:.75}.stamp{position:fixed;right:5vw;bottom:5vh;border:1.5px solid #e6f0ff;font-size:.65rem;padding:.6rem .8rem;line-height:1.6}.legal{color:#e6f0ff;text-decoration:none}`, `<h1>HELD0</h1><p class="sub">BAUPLAN · MASSSTAB 1:1 · BLATT 1/1</p>${P.map(([n, d], i) => `<div class="box" data-n="POS. ${i + 1}">${A(n)}<p>${d}</p></div>`).join("")}<div class="stamp">GEZ.: N. HELD<br>ORT: KÖLN<br>${LEGAL}</div>`);
+}
+
+const IDEAS = [
+  ["Terminal", T, terminal], ["Editorial", E, editorial], ["Brutalistisch", B, brutal], ["Swiss", S, swiss], ["Index-Tabelle", I, indexTable],
+  ["Karten", C, cards], ["Große Schrift", K, kinetic], ["Retro-OS", R, retro], ["Verspielt", G, playful], ["Papier", N, paper],
+];
+const ALL = IDEAS.flatMap(([idea, vs, fn], ii) => vs.map((v, vi) => ({ id: `${ii + 1}.${vi}`, ii, vi, idea, name: v.n, html: () => fn(v) })));
+
+// Ausgeblendete Varianten pro Browser merken
+const HKEY = "held0-varianten-raus";
+let hidden = new Set(); try { hidden = new Set(JSON.parse(localStorage.getItem(HKEY) || "[]")); } catch {}
+const saveHidden = () => { try { localStorage.setItem(HKEY, JSON.stringify([...hidden])); } catch {} };
+const visible = () => { const v = ALL.filter((x) => !hidden.has(x.id)); return v.length ? v : ALL; };
+
+const q = new URLSearchParams(location.search);
+let phone = q.get("handy") === "1" || matchMedia("(max-width: 720px)").matches;
+let cur = Math.max(0, visible().findIndex((x) => x.id === q.get("v")));
+const frame = document.createElement("iframe"); document.body.prepend(frame);
+const ctl = document.getElementById("ctl");
+const fit = () => { document.body.classList.toggle("phone", phone); document.documentElement.style.setProperty("--s", Math.min(1, (innerHeight - 90) / 864, (innerWidth - 30) / 410)); };
+addEventListener("resize", fit);
+
+function render() {
+  const V = visible(), x = V[cur];
+  const ideas = [...new Set(V.map((v) => v.ii))];
+  ctl.innerHTML = `<button data-a="prev">←</button><b>${x.id} · ${x.name}</b><span class="idea">${x.idea}</span><button data-a="next">→</button><span class="sep"></span>` +
+    ideas.map((ii) => `<button data-ii="${ii}" class="${ii === x.ii ? "on" : ""}">${IDEAS[ii][0]}</button>`).join("") +
+    `<span class="sep"></span><button data-a="out" title="Taste X">✕ raus</button>${hidden.size ? `<button data-a="restore">↺ ${hidden.size} ausgeblendet</button>` : ""}<button data-a="phone">${phone ? "📱 Handy" : "🖥 Desktop"}</button><button data-a="full">⛶ Vollbild</button><button data-a="hide">✕</button>`;
+  ctl.scrollLeft = 0;
+}
+function show(i) {
+  const V = visible();
+  cur = (i + V.length) % V.length;
+  frame.srcdoc = V[cur].html();
+  render();
+  history.replaceState(null, "", `?v=${V[cur].id}${phone ? "&handy=1" : ""}`);
+}
+// innerhalb der Idee blättern bzw. zur nächsten/vorigen Idee springen
+function idea(step) {
+  const V = visible(), ids = [...new Set(V.map((v) => v.ii))];
+  const k = (ids.indexOf(V[cur].ii) + step + ids.length) % ids.length;
+  show(V.findIndex((v) => v.ii === ids[k]));
+}
+function inIdea(n) { const V = visible(); const j = V.findIndex((v) => v.ii === V[cur].ii && v.vi === n); if (j >= 0) show(j); }
+function out() { hidden.add(visible()[cur].id); saveHidden(); show(Math.min(cur, visible().length - 1)); }
+function full() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); }
+ctl.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.ii) return show(visible().findIndex((v) => v.ii === Number(b.dataset.ii)));
+  ({ prev: () => show(cur - 1), next: () => show(cur + 1), phone: () => { phone = !phone; fit(); show(cur); }, full, hide: () => ctl.classList.add("hide"), out, restore: () => { hidden.clear(); saveHidden(); show(0); } })[b.dataset.a]?.();
+});
+function key(e) {
+  const k = e.key.toLowerCase();
+  if (k === "arrowright") show(cur + 1);
+  else if (k === "arrowleft") show(cur - 1);
+  else if (k === "arrowdown") { e.preventDefault(); idea(1); }
+  else if (k === "arrowup") { e.preventDefault(); idea(-1); }
+  else if (/^[0-9]$/.test(k)) inIdea(Number(k));
+  else if (k === "f") full();
+  else if (k === "x") out();
+  else if (k === "h") ctl.classList.toggle("hide");
+  else if (k === "m") { phone = !phone; fit(); show(cur); }
+}
+addEventListener("keydown", key);
+// Tasten auch, wenn der Fokus in der Variante liegt
+frame.addEventListener("load", () => { try { frame.contentWindow.addEventListener("keydown", key); } catch {} });
+setTimeout(() => (document.getElementById("hint").style.opacity = 0), 6000);
+fit();
+show(cur);
+</script>
+</body>
+</html>

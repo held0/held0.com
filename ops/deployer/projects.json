@@ -1,0 +1,20 @@
+{
+  "dev.held0.com": {
+    "name": "held0",
+    "devService": "held0-dev",
+    "liveService": "held0-portfolio-web",
+    "legacyLabel": "held0-portfolio",
+    "port": 3000,
+    "hosts": ["held0.com", "www.held0.com"],
+    "liveUrl": "https://held0.com/"
+  },
+  "dev.imposter-online.com": {
+    "name": "imposter",
+    "devService": "imposter-dev",
+    "liveService": "imposter-web",
+    "legacyLabel": "imposter",
+    "port": 3000,
+    "hosts": ["imposter-online.com", "www.imposter-online.com"],
+    "liveUrl": "https://imposter-online.com/"
+  }
+}

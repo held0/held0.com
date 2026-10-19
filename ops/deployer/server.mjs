@@ -38,7 +38,7 @@ async function status(p) {
   let subject = null;
   try {
     const info = fs.readFileSync(`/host/state/${p.name}.dev-sha`, "utf8").trim().split(" ");
-    if (info[1]) subject = Buffer.from(info[1], "base64").toString("utf8");
+    if (info[1]) subject = Buffer.from(info[1], "base64").toString("utf8").trim();
   } catch {}
   return { project: p.name, dev: sha(devImage), live: sha(liveImage), subject, devImage, same: devImage === liveImage };
 }

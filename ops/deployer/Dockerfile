@@ -1,5 +1,5 @@
 FROM node:22-alpine
-RUN apk add --no-cache docker-cli
+RUN apk add --no-cache docker-cli rsync
 WORKDIR /app
 COPY server.mjs button.js projects.json ./
 EXPOSE 8080

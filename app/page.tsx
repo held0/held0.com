@@ -9,8 +9,8 @@ export default function Home() {
       <ul>
         {projects.map((p) => (
           <li key={p.name}>
+            <p>{`// ${p.description}`}</p>
             <a href={p.href}>{p.name}</a>
-            <p>{p.description}</p>
           </li>
         ))}
       </ul>

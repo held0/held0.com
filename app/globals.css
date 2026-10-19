@@ -1,27 +1,26 @@
-:root { color-scheme: light dark; --bg: #fafafa; --fg: #111; --muted: #777; }
-@media (prefers-color-scheme: dark) { :root { --bg: #0b0b0b; --fg: #eee; --muted: #888; } }
+/* Design 11.7 „Tannengrün & Mint“ (Terminal 1.9, Kommentare über den Projekten) */
+:root { color-scheme: dark; --bg: #0e1a14; --fg: #d8eadf; --muted: #5f7d6c; --accent: #7ee2a8; }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
   background: var(--bg); color: var(--fg);
   font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
   min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-  padding: 18vh 24px 24px;
+  padding: 16vh 24px 24px;
 }
-main { width: 100%; max-width: 34rem; flex: 1; }
-h1 { font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 600; letter-spacing: -0.04em; margin: 0 0 2.5rem; text-align: center; }
+main { width: 100%; max-width: 36rem; flex: 1; }
+h1 { font-size: clamp(2.5rem, 8vw, 4.5rem); font-weight: 600; letter-spacing: -0.04em; margin: 0 0 2.5rem; }
 h1 span { animation: blink 1.1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 a { color: inherit; }
 ul { list-style: none; padding: 0; margin: 0; }
-li { margin: 0 0 1.1rem; }
-li a { text-decoration: none; }
+li p { color: var(--muted); margin: 1.6rem 0 0.2rem; }
+li a { color: var(--accent); text-decoration: none; }
 li a:hover { text-decoration: underline; }
-li p { color: var(--muted); margin: 0.2rem 0 0; font-size: 0.9rem; }
 footer { margin-top: 3rem; font-size: 0.75rem; }
 footer a { color: var(--muted); text-decoration: none; }
 footer a:hover { color: var(--fg); }
 .legal { font-size: 0.85rem; line-height: 1.6; }
-.legal h1 { font-size: 1.4rem; text-align: left; margin-bottom: 1rem; }
-.legal h2 { font-size: 1rem; margin: 2rem 0 0.5rem; }
+.legal h1 { font-size: 1.4rem; margin-bottom: 1rem; }
 .legal p { margin: 0 0 0.8rem; }
+.legal a { color: var(--accent); }

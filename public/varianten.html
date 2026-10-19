@@ -381,9 +381,34 @@ function paper(v) {
   return page(`body{background:#0b3d91;background-image:linear-gradient(#ffffff14 1px,transparent 1px),linear-gradient(90deg,#ffffff14 1px,transparent 1px),linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:80px 80px,80px 80px,16px 16px,16px 16px;color:#e6f0ff;font-family:"IBM Plex Mono",monospace;min-height:100vh;margin:0;padding:6vh 5vw}h1{font-size:3rem;margin:0;font-weight:400;letter-spacing:.1em}.sub{font-size:.75rem;margin:0 0 3rem;opacity:.7}.box{border:1.5px solid #e6f0ff;padding:1rem 1.2rem;margin-bottom:1.2rem;max-width:34rem;position:relative}.box::after{content:attr(data-n);position:absolute;top:-.7rem;right:1rem;background:#0b3d91;padding:0 .4rem;font-size:.7rem}.box a{text-decoration:none;font-size:1.1rem}.box a:hover{text-decoration:underline}.box p{margin:.3rem 0 0;font-size:.8rem;opacity:.75}.stamp{position:fixed;right:5vw;bottom:5vh;border:1.5px solid #e6f0ff;font-size:.65rem;padding:.6rem .8rem;line-height:1.6}.legal{color:#e6f0ff;text-decoration:none}`, `<h1>HELD0</h1><p class="sub">BAUPLAN · MASSSTAB 1:1 · BLATT 1/1</p>${P.map(([n, d], i) => `<div class="box" data-n="POS. ${i + 1}">${A(n)}<p>${d}</p></div>`).join("")}<div class="stamp">GEZ.: N. HELD<br>ORT: KÖLN<br>${LEGAL}</div>`);
 }
 
+// ---------- Terminal 1.9 in anderen Farben (Wunsch 19.10.2026) ----------
+const T9 = [
+  ["1.9 wie bisher", "#f6f5f0", "#1a1a1a", "#8a877c", "#b4451f"],
+  ["Papier & blaue Tinte", "#fbfaf6", "#111111", "#9a978d", "#1f4fd1"],
+  ["Weiß & Smaragd", "#ffffff", "#0f172a", "#94a3b8", "#059669"],
+  ["Schwarz & Bernstein", "#0b0b0b", "#e8e6e1", "#6b6b6b", "#ffb000"],
+  ["Nachtblau & Cyan", "#0b1020", "#dbe4ff", "#5d6b8a", "#5eead4"],
+  ["Hellgrau & Rot", "#ececec", "#1a1a1a", "#8c8c8c", "#e11d48"],
+  ["Creme & Oliv", "#f3efe3", "#2b2a24", "#9a9583", "#6b7f2a"],
+  ["Tannengrün & Mint", "#0e1a14", "#d8eadf", "#5f7d6c", "#7ee2a8"],
+  ["Hell & Violett", "#faf7ff", "#1e1530", "#9a8fb0", "#7c3aed"],
+  ["Schwarz-Weiß", "#000000", "#ffffff", "#6a6a6a", "#ffffff"],
+  ["Espresso & Terrakotta", "#1c1714", "#efe6dc", "#8a7a6c", "#e07a5f"],
+  ["Solarized hell", "#fdf6e3", "#586e75", "#93a1a1", "#cb4b16"],
+  ["Gruvbox dunkel", "#282828", "#ebdbb2", "#928374", "#fabd2f"],
+  ["Nord", "#2e3440", "#eceff4", "#7b88a1", "#88c0d0"],
+  ["Dracula", "#282a36", "#f8f8f2", "#6272a4", "#ff79c6"],
+  ["Rosé", "#fff5f5", "#2a1a1d", "#b08a90", "#db2777"],
+  ["Marker-Gelb", "#fffbe6", "#111111", "#8a8466", "#c2410c"],
+  ["Tiefblau & Weiß", "#0a2a6b", "#f2f5ff", "#8ea3d4", "#ffd166"],
+  ["Beton & Orange", "#d6d3cd", "#1b1b1b", "#76726b", "#ff5a1f"],
+  ["Mitternacht & Lime", "#0a0a0f", "#e6e6f0", "#5a5a6e", "#c6ff3d"],
+].map(([n, bg, fg, mu, ac]) => ({ n, bg, fg, mu, ac, mode: "comment" }));
+
 const IDEAS = [
   ["Terminal", T, terminal], ["Editorial", E, editorial], ["Brutalistisch", B, brutal], ["Swiss", S, swiss], ["Index-Tabelle", I, indexTable],
   ["Karten", C, cards], ["Große Schrift", K, kinetic], ["Retro-OS", R, retro], ["Verspielt", G, playful], ["Papier", N, paper],
+  ["1.9 Farben", T9, terminal],
 ];
 const ALL = IDEAS.flatMap(([idea, vs, fn], ii) => vs.map((v, vi) => ({ id: `${ii + 1}.${vi}`, ii, vi, idea, name: v.n, html: () => fn(v) })));
 

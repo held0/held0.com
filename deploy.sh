@@ -36,9 +36,9 @@ git archive HEAD | S "rm -rf /tmp/$SERVICE-build && mkdir -p /tmp/$SERVICE-build
 OLD=$(S "docker ps -q --filter label=service=$SERVICE" | tr '\n' ' ')
 ENV=""
 if [ "$STAGE" = dev ]; then
-  # Zugang user:passwort liegt nur auf dem Server; wird beim ersten Mal erzeugt
-  S "[ -f ~/$SERVICE.auth ] || (umask 077; echo dev:\$(openssl rand -hex 12) > ~/$SERVICE.auth)"
-  ENV='-e BASIC_AUTH="$(cat ~/'$SERVICE'.auth)"'
+  # Gemeinsamer Zugang aller dev-Seiten (Benutzer dev, Passwort legt Niklas selbst fest): ~/dev.auth auf dem Server
+  S "test -s ~/dev.auth" || { echo "~/dev.auth fehlt auf dem Server (Inhalt: dev:<passwort>) – bitte zuerst anlegen."; exit 1; }
+  ENV='-e BASIC_AUTH="$(cat ~/dev.auth)"'
 fi
 
 echo "→ Container starten"
@@ -62,7 +62,7 @@ fi
 
 if [ "$STAGE" = dev ]; then
   S "echo $SHA > $DEVSHA"
-  echo "✓ dev: https://dev.held0.com (Zugang: ~/$SERVICE.auth auf dem Server)"
+  echo "✓ dev: https://dev.held0.com (Benutzer dev, gemeinsames Passwort)"
 else
   curl -s -o /dev/null -w "✓ live: held0.com → %{http_code}\n" https://held0.com/
 fi

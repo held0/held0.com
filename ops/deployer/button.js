@@ -1,67 +1,84 @@
 // Schwebender „Live deployen“-Button für dev-Seiten (eingebunden über /__deploy/button.js).
+// Stile nur per element.style (CSSOM) – funktioniert auch unter strengen CSPs ohne 'unsafe-inline'.
 (() => {
   if (window.__held0Deploy) return;
   window.__held0Deploy = true;
-  const css = `
-  .h0d-btn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:2147483646;font:600 13px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
-    background:#0e1a14;color:#7ee2a8;border:1px solid #7ee2a8;border-radius:999px;padding:9px 14px;cursor:pointer;opacity:.35;transition:opacity .2s,transform .2s;box-shadow:0 8px 24px -10px #000}
-  .h0d-btn:hover,.h0d-btn:focus-visible{opacity:1;transform:translateY(-2px)}
-  .h0d-back{position:fixed;inset:0;z-index:2147483647;background:#0008;display:grid;place-items:center;padding:16px;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
-  .h0d-box{background:#0e1a14;color:#d8eadf;border:1px solid #2c4a3b;border-radius:14px;max-width:26rem;width:100%;padding:20px 22px;box-shadow:0 30px 60px -20px #000}
-  .h0d-box h2{margin:0 0 12px;font-size:16px;color:#7ee2a8}.h0d-box p{margin:0 0 10px}.h0d-mu{color:#5f7d6c}
-  .h0d-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-  .h0d-row button{font:inherit;border-radius:8px;padding:8px 14px;cursor:pointer;border:1px solid #2c4a3b;background:transparent;color:#d8eadf}
-  .h0d-row .go{background:#7ee2a8;color:#0e1a14;border-color:#7ee2a8;font-weight:700}.h0d-row button:disabled{opacity:.5;cursor:default}
-  .h0d-err{color:#ff8a8a}`;
-  const style = document.createElement("style");
-  style.textContent = css;
-  document.head.appendChild(style);
-
-  const btn = document.createElement("button");
-  btn.className = "h0d-btn";
-  btn.type = "button";
-  btn.textContent = "▲ live deployen";
-  document.body.appendChild(btn);
-
-  const modal = (html) => {
-    const back = document.createElement("div");
-    back.className = "h0d-back";
-    back.innerHTML = `<div class="h0d-box" role="dialog" aria-modal="true">${html}</div>`;
-    back.addEventListener("click", (e) => { if (e.target === back) back.remove(); });
-    document.body.appendChild(back);
-    return back;
+  const C = { bg: "#0e1a14", fg: "#d8eadf", mu: "#5f7d6c", ac: "#7ee2a8", line: "#2c4a3b", err: "#ff8a8a" };
+  const FONT = "13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace";
+  const el = (tag, style = {}, text) => {
+    const e = document.createElement(tag);
+    Object.assign(e.style, style);
+    if (text != null) e.textContent = text;
+    return e;
+  };
+  const button = (label, primary) => {
+    const b = el("button", { font: FONT, borderRadius: "8px", padding: "8px 14px", cursor: "pointer", border: `1px solid ${primary ? C.ac : C.line}`,
+      background: primary ? C.ac : "transparent", color: primary ? C.bg : C.fg, fontWeight: primary ? "700" : "400" }, label);
+    b.type = "button";
+    return b;
   };
 
-  btn.addEventListener("click", async () => {
-    const back = modal(`<h2>Live deployen</h2><p class="h0d-mu">Lade Stand …</p>`);
-    const box = back.firstElementChild;
+  const fab = el("button", { position: "fixed", right: "16px", bottom: "calc(16px + env(safe-area-inset-bottom, 0px))", zIndex: "2147483646",
+    font: "600 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace", background: C.bg, color: C.ac, border: `1px solid ${C.ac}`,
+    borderRadius: "999px", padding: "9px 14px", cursor: "pointer", opacity: "0.35", transition: "opacity .2s, transform .2s",
+    boxShadow: "0 8px 24px -10px #000" }, "▲ live deployen");
+  fab.type = "button";
+  const hover = (on) => { fab.style.opacity = on ? "1" : "0.35"; fab.style.transform = on ? "translateY(-2px)" : "none"; };
+  ["mouseenter", "focus"].forEach((ev) => fab.addEventListener(ev, () => hover(true)));
+  ["mouseleave", "blur"].forEach((ev) => fab.addEventListener(ev, () => hover(false)));
+  document.body.appendChild(fab);
+
+  function dialog() {
+    const back = el("div", { position: "fixed", inset: "0", zIndex: "2147483647", background: "rgba(0,0,0,.55)", display: "grid", placeItems: "center", padding: "16px" });
+    const box = el("div", { background: C.bg, color: C.fg, border: `1px solid ${C.line}`, borderRadius: "14px", maxWidth: "26rem", width: "100%",
+      padding: "20px 22px", boxShadow: "0 30px 60px -20px #000", font: FONT, fontSize: "14px" });
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    back.appendChild(box);
+    back.addEventListener("click", (e) => { if (e.target === back) back.remove(); });
+    document.body.appendChild(back);
+    const fill = (title, lines, actions) => {
+      box.replaceChildren(el("h2", { margin: "0 0 12px", fontSize: "16px", color: C.ac }, title));
+      for (const [text, style] of lines) box.appendChild(el("p", { margin: "0 0 10px", ...style }, text));
+      const row = el("div", { display: "flex", gap: "8px", justifyContent: "flex-end", marginTop: "16px" });
+      actions.forEach((a) => row.appendChild(a));
+      box.appendChild(row);
+    };
+    const close = () => { const b = button("Schließen"); b.onclick = () => back.remove(); return b; };
+    return { fill, close };
+  }
+
+  fab.addEventListener("click", async () => {
+    const d = dialog();
+    d.fill("Live deployen", [["Lade Stand …", { color: C.mu }]], []);
     let s;
     try {
       s = await (await fetch("/__deploy/status", { credentials: "same-origin" })).json();
       if (s.error) throw new Error(s.error);
     } catch (e) {
-      box.innerHTML = `<h2>Live deployen</h2><p class="h0d-err">${e.message}</p><div class="h0d-row"><button data-x>Schließen</button></div>`;
-      box.querySelector("[data-x]").onclick = () => back.remove();
-      return;
+      return d.fill("Live deployen", [[e.message, { color: C.err }]], [d.close()]);
     }
-    box.innerHTML = `<h2>${s.project} live schalten?</h2>
-      <p>Dieser dev-Stand geht live:<br><b>${s.dev}</b>${s.subject ? ` – ${s.subject.replace(/</g, "&lt;")}` : ""}</p>
-      <p class="h0d-mu">Aktuell live: ${s.live || "–"}${s.same ? " (identisch)" : ""}</p>
-      <div class="h0d-row"><button data-x>Abbrechen</button><button class="go" data-go>Ja, live schalten</button></div>`;
-    box.querySelector("[data-x]").onclick = () => back.remove();
-    box.querySelector("[data-go]").onclick = async (e) => {
-      e.target.disabled = true;
-      box.querySelector("[data-x]").disabled = true;
-      e.target.textContent = "Wird deployt …";
+    const cancel = button("Abbrechen");
+    const go = button("Ja, live schalten", true);
+    d.fill(`${s.project} live schalten?`, [
+      ["Dieser dev-Stand geht live:", {}],
+      [`${s.dev || "–"}${s.subject ? " – " + s.subject : ""}`, { fontWeight: "700" }],
+      [`Aktuell live: ${s.live || "–"}${s.same ? " (identisch)" : ""}`, { color: C.mu }],
+    ], [cancel, go]);
+    cancel.onclick = () => cancel.closest("div[role=dialog]").parentElement.remove();
+    go.onclick = async () => {
+      go.disabled = cancel.disabled = true;
+      go.textContent = "Wird deployt …";
       try {
         const r = await fetch("/__deploy/promote", { method: "POST", credentials: "same-origin", headers: { "X-Held0-Deploy": "1" } });
         const out = await r.json();
         if (!r.ok) throw new Error(out.error || r.status);
-        box.innerHTML = `<h2>✓ Live</h2><p>Stand <b>${out.live}</b> ist live.</p><p><a href="${out.url}" target="_blank" style="color:#7ee2a8">${out.url}</a></p><div class="h0d-row"><button data-x>Schließen</button></div>`;
+        const open = button("Live-Seite öffnen", true);
+        open.onclick = () => window.open(out.url, "_blank", "noopener");
+        d.fill("✓ Live", [[`Stand ${out.live} ist live.`, {}], [out.url, { color: C.mu }]], [d.close(), open]);
       } catch (err) {
-        box.innerHTML = `<h2>Nicht deployt</h2><p class="h0d-err">${err.message}</p><div class="h0d-row"><button data-x>Schließen</button></div>`;
+        d.fill("Nicht deployt", [[err.message, { color: C.err }]], [d.close()]);
       }
-      box.querySelector("[data-x]").onclick = () => back.remove();
     };
   });
 })();

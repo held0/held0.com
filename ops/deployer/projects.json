@@ -1,20 +1,39 @@
 {
   "dev.held0.com": {
-    "name": "held0",
-    "devService": "held0-dev",
-    "liveService": "held0-portfolio-web",
-    "legacyLabel": "held0-portfolio",
-    "port": 3000,
-    "hosts": ["held0.com", "www.held0.com"],
-    "liveUrl": "https://held0.com/"
+    "name": "held0", "type": "image",
+    "devService": "held0-dev", "liveService": "held0-portfolio-web", "legacyLabel": "held0-portfolio",
+    "port": 3000, "hosts": ["held0.com", "www.held0.com"], "liveUrl": "https://held0.com/"
   },
   "dev.imposter-online.com": {
-    "name": "imposter",
-    "devService": "imposter-dev",
-    "liveService": "imposter-web",
-    "legacyLabel": "imposter",
-    "port": 3000,
-    "hosts": ["imposter-online.com", "www.imposter-online.com"],
-    "liveUrl": "https://imposter-online.com/"
+    "name": "imposter", "type": "image",
+    "devService": "imposter-dev", "liveService": "imposter-web", "legacyLabel": "imposter",
+    "port": 3000, "hosts": ["imposter-online.com", "www.imposter-online.com"], "liveUrl": "https://imposter-online.com/"
+  },
+  "dev.checkfirma.de": {
+    "name": "checkfirma", "type": "image",
+    "devFixedName": "checkfirma-dev", "liveService": "checkfirma", "fixedName": "checkfirma",
+    "runArgs": ["--env-file", "/opt/checkfirma/.env",
+                "-v", "/opt/checkfirma/data:/srv/app/data", "-v", "/mnt/HC_Volume_106399635/replays:/srv/app/data/replays"],
+    "port": 8000, "healthPath": "/healthz",
+    "hosts": ["checkfirma.de", "www.checkfirma.de", "checkfirma.held0.com"], "liveUrl": "https://checkfirma.de/"
+  },
+  "dev.watchsoon.held0.com": {
+    "name": "watchsoon", "type": "files",
+    "devDir": "/home/deploy/moviegeeks-dev/app", "liveDir": "/home/deploy/moviegeeks/app", "exclude": ["data"],
+    "after": ["docker", "restart", "moviegeeks"], "healthUrl": "http://moviegeeks:3210/up",
+    "liveUrl": "https://watchsoon.held0.com/"
+  },
+  "dev.vokalreim.de": {
+    "name": "vokalreim", "type": "files",
+    "devDir": "/home/deploy/vokalreim-dev/html", "liveDir": "/home/deploy/vokalreim/html",
+    "after": ["docker", "exec", "vokalreim", "nginx", "-s", "reload"], "healthUrl": "http://vokalreim:80/up",
+    "liveUrl": "https://vokalreim.de/"
+  },
+  "dev.cinenow.app": {
+    "name": "cinenow", "type": "files",
+    "devDir": "/home/deploy/cinenow-dev/app", "liveDir": "/home/deploy/cinep-dev/app",
+    "exclude": ["data", "config.json", "node_modules", "*.log"],
+    "after": ["docker", "restart", "cinep-dev"], "healthUrl": "http://cinep-dev:3220/up",
+    "liveUrl": "https://cinenow.app/"
   }
 }

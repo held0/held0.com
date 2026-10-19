@@ -11,7 +11,7 @@ STAGE=${1:-}
 SERVER=deploy@178.104.62.232
 IMAGE=ghcr.io/held0/held0-portfolio
 PORT=3000
-DEVSHA="~/held0.dev-sha"   # zuletzt auf dev deployter Stand
+DEVSHA="~/deploy-state/held0.dev-sha"   # zuletzt auf dev deployter Stand (+ Commit-Titel, liest auch der Deploy-Button)
 # eine SSH-Verbindung für alle Schritte (viele Einzelverbindungen weist der Server teils ab)
 S() { ssh -o ControlMaster=auto -o ControlPath="/tmp/deploy-%C" -o ControlPersist=120 "$SERVER" "$@"; }
 case "$STAGE" in
@@ -26,7 +26,7 @@ git push -q
 SHA=$(git rev-parse HEAD)
 
 # 2. Live nur mit einem Stand, der vorher auf dev geprüft wurde
-if [ "$STAGE" = live ] && [ "$(S "cat $DEVSHA 2>/dev/null || true")" != "$SHA" ]; then
+if [ "$STAGE" = live ] && [ "$(S "cut -d' ' -f1 $DEVSHA 2>/dev/null || true")" != "$SHA" ]; then
   echo "Stand ${SHA:0:7} lief noch nicht auf dev – erst ./deploy.sh dev und dort prüfen."; exit 1
 fi
 
@@ -61,7 +61,7 @@ if [ -n "$OLD" ]; then
 fi
 
 if [ "$STAGE" = dev ]; then
-  S "echo $SHA > $DEVSHA"
+  S "mkdir -p ~/deploy-state && echo $SHA $(git log -1 --format=%s | base64 | tr -d '\n') > $DEVSHA"
   echo "✓ dev: https://dev.held0.com (Benutzer dev, gemeinsames Passwort)"
 else
   curl -s -o /dev/null -w "✓ live: held0.com → %{http_code}\n" https://held0.com/

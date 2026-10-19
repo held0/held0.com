@@ -18,6 +18,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <footer>
           <Link href="/impressum">impressum · datenschutz</Link>
         </footer>
+        {/* „Live deployen“-Button nur auf dev-Seiten (Dienst hängt dort unter /__deploy) */}
+        <Script id="dev-deploy" strategy="afterInteractive">
+          {`if(location.hostname.indexOf("dev.")===0){var s=document.createElement("script");s.src="/__deploy/button.js";document.body.appendChild(s)}`}
+        </Script>
         <Script
           src="https://stats.held0.com/script.js"
           data-website-id="b007ca44-f1cf-41b5-8535-c75c2552c78f"

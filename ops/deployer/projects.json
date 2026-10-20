@@ -113,5 +113,26 @@
       "dev.fahrtrichtung.held0.com"
     ],
     "liveUrl": "https://fahrtrichtung.info/"
+  },
+  "dev.myveryown.app": {
+    "name": "myveryown",
+    "type": "image",
+    "devService": "myveryown-dev",
+    "liveService": "myveryown-web",
+    "port": 3000,
+    "healthPath": "/up",
+    "runArgs": [
+      "--network-alias",
+      "myveryown-web",
+      "-v",
+      "myveryown-web-data:/data",
+      "-e",
+      "BASE_DOMAIN=myveryown.app"
+    ],
+    "hosts": [
+      "myveryown.app",
+      "www.myveryown.app"
+    ],
+    "liveUrl": "https://myveryown.app/"
   }
 }

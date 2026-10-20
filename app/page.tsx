@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { projects } from "./projects";
 import { SITE } from "./agent-text";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { type: "website", url: "/", siteName: "held0", title: "held0", description: "Projekte von Niklas Held." },
+};
 
 // Strukturierte Daten: nur, was die Seite wirklich ist – eine Projektliste, Kontakt nur per E-Mail.
 const jsonLd = {

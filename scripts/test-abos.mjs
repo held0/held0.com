@@ -1,7 +1,7 @@
 // Kurztest der Fristberechnung für /admin:  node scripts/test-abos.mjs
 // (Node ≥ 22.18 lädt die TypeScript-Datei direkt.)
 import assert from "node:assert/strict";
-import { computeTerm, addMonths, monthlyCost, totals, contractEnd, contractState, groupOf } from "../lib/admin/calc.ts";
+import { computeTerm, addMonths, monthlyCost, totals, formatEUR, contractEnd, contractState, groupOf } from "../lib/admin/calc.ts";
 
 const base = { status: "aktiv", noticeUnit: "monate" };
 const check = (name, abo, today, expected) => {
@@ -41,9 +41,20 @@ const t = totals([
   { status: "aktiv", amount: null, interval: "monat", currency: "EUR" },
   { status: "beendet", amount: 99, interval: "monat", currency: "EUR" },
 ]);
-assert.equal(t.perMonth.EUR, 6);
-assert.equal(t.perYear.EUR, 72);
+assert.equal(t.perMonth, 6);
+assert.equal(t.perYear, 72);
 assert.equal(t.missing, 1);
+assert.equal(t.converted, false);
+// andere Währungen: in Euro umgerechnet (USD 0,86), Summe mit „≈“
+const u = totals([
+  { status: "aktiv", amount: 10, interval: "monat", currency: "EUR" },
+  { status: "aktiv", amount: 120, interval: "jahr", currency: "USD" },
+]);
+assert.equal(u.perMonth.toFixed(2), "18.60");
+assert.equal(u.perYear.toFixed(2), "223.20");
+assert.equal(u.converted, true);
+assert.equal(formatEUR(u.perMonth, u.converted).replace(/\s/g, " "), "≈ 18,60 €");
+assert.equal(formatEUR(6).replace(/\s/g, " "), "6,00 €");
 console.log("✓ Kosten und Summen");
 
 // 7. Gekündigt: Ende aus „gekündigt am“ (Kündigung 01.09.2027 kommt für die Laufzeit bis 19.10.2027 rechtzeitig)

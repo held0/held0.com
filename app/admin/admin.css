@@ -24,7 +24,6 @@ body:has(.admin) footer a { color: var(--muted); }
 .admin { font-size: 0.9rem; line-height: 1.45; }
 .admin .muted { color: var(--muted); }
 .admin .warn { color: var(--warn); }
-.admin .urgent { color: var(--urgent); }
 .admin small { display: block; color: var(--muted); font-size: 0.78rem; }
 .admin h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
 .admin h2 { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 0.6rem; }
@@ -42,16 +41,13 @@ body:has(.admin) footer a { color: var(--muted); }
 .admin button:hover, .admin .button:hover { border-color: var(--accent); }
 .admin button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
 .admin button.primary:disabled { opacity: 0.6; }
-.admin button.danger { border-color: var(--urgent); color: var(--urgent); }
 .admin button.ghost { background: transparent; color: var(--muted); }
 .admin button.link { background: none; border: 0; padding: 0; text-align: left; color: var(--accent); }
 .admin button.link:hover { text-decoration: underline; }
 .admin button:focus-visible, .admin input:focus-visible, .admin select:focus-visible, .admin textarea:focus-visible, .admin .button:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 1px;
 }
-.admin label.button { display: inline-block; }
 
-.admin-info { border: 1px solid var(--line); background: var(--panel); padding: 0.6rem 0.8rem; border-radius: 6px; }
 .admin-error { border: 1px solid var(--urgent); background: var(--urgent-bg); color: var(--urgent); padding: 0.6rem 0.8rem; border-radius: 6px; }
 
 /* Kacheln */
@@ -63,14 +59,24 @@ body:has(.admin) footer a { color: var(--muted); }
 .tiles .tile-states strong { display: flex; flex-wrap: wrap; gap: 0.3rem; font-size: 0.85rem; padding-top: 0.2rem; }
 .tiles .tile-states .badge + .badge { margin-left: 0; }
 
-/* Frist läuft ab */
-.soon { margin-bottom: 1.5rem; }
-.soon ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
-.soon li { border: 1px solid var(--line); border-left: 4px solid var(--warn); padding: 0.4rem 0.75rem; background: var(--panel); border-radius: 6px; }
-.soon li.urgent { border-left-color: var(--urgent); }
-.soon li button.link { color: var(--fg); }
-.soon li.warn strong { color: var(--warn); }
-.soon li.urgent strong { color: var(--urgent); }
+/* Kündigungsfristen: ≤ 60 Tage gelb, ≤ 14 Tage rot, spätere (Auffüllen auf 3) neutral */
+.soon { margin-bottom: 1.5rem; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem 1rem 0.85rem; }
+.soon h2 { color: var(--fg); }
+.soon ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.3rem; }
+.soon li { border-left: 4px solid var(--line-strong); border-radius: 4px; background: var(--surface); }
+.soon li.warn { border-left-color: var(--warn); background: var(--warn-bg); }
+.soon li.urgent { border-left-color: var(--urgent); background: var(--urgent-bg); }
+.soon li button.link { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.9rem; width: 100%; padding: 0.4rem 0.7rem; color: var(--fg); }
+.soon li button.link:hover { text-decoration: none; }
+.soon li button.link:hover .what { text-decoration: underline; }
+.soon .when { min-width: 9.5rem; white-space: nowrap; }
+.soon .days { font-size: 0.8rem; }
+.soon li.warn .when { color: var(--warn); }
+.soon li.urgent .when { color: var(--urgent); }
+.soon li.later .when { color: var(--muted); }
+.soon li.later .when strong { color: var(--fg); }
+.soon .what { flex: 1 1 14rem; min-width: 0; }
+.soon .else { font-size: 0.8rem; }
 .soon p { margin: 0; }
 
 /* Filter */
@@ -100,12 +106,25 @@ body:has(.admin) footer a { color: var(--muted); }
 .abos td.c-service button.link { display: inline; white-space: nowrap; }
 .abos td.c-project { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
 .abos .per { color: var(--muted); font-size: 0.75rem; margin-left: 0.15rem; }
-.abos .note { color: var(--muted); margin-left: 0.4rem; cursor: help; }
+.abos .note { color: var(--muted); margin-left: 0.4rem; }
 
 /* gekündigt/beendet: zurückgenommen, beendet mit durchgestrichenem Betrag */
 .abos tr.state-gekuendigt td:not(.c-state), .abos tr.state-beendet td:not(.c-state) { color: var(--muted); }
 .abos tr.state-gekuendigt td.c-service button.link, .abos tr.state-beendet td.c-service button.link { color: var(--muted); }
 .abos tr.state-beendet td.c-cost, .abos tr.state-beendet td.c-month, .abos tr.state-beendet td.c-year { text-decoration: line-through; }
+
+/* aufgeklappte Detailzeile (nur lesen) */
+.abos tr.expanded, .abos tr.expanded:hover { background: var(--surface); }
+.abos tr.expanded td { border-bottom: 0; }
+.abos tr.detail, .abos tr.detail:hover { background: var(--surface); cursor: default; }
+.abos tr.detail td { white-space: normal; padding: 0.1rem 0.6rem 0.6rem 1.7rem; }
+.abos tr.detail.child td { padding-left: 2.6rem; }
+.abos tr.detail dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.35rem 1.25rem; }
+.abos tr.detail dl .wide { grid-column: 1 / -1; }
+.abos tr.detail dt { color: var(--muted); font-size: 0.72rem; }
+.abos tr.detail dd { margin: 0; overflow-wrap: anywhere; }
+.abos td.c-deadline.urgent { color: var(--urgent); }
+.abos td.c-deadline.warn { color: var(--warn); }
 
 /* Gruppen */
 .abos tr.group, .abos tr.group:hover { background: var(--surface); }
@@ -121,9 +140,6 @@ body:has(.admin) footer a { color: var(--muted); }
 .badge.beendet { color: var(--end); background: var(--end-bg); }
 .abos td.c-state { width: 1%; }
 
-.per-project { margin: 2rem 0 1rem; max-width: 46rem; }
-.per-project .table-wrap { font-size: 0.85rem; }
-
 /* Anmeldung */
 .admin-login { width: min(22rem, 100%); margin: 8vh auto 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1.5rem; }
 .admin-login h1 { font-size: 1.3rem; margin: 0 0 1.25rem; }
@@ -132,26 +148,6 @@ body:has(.admin) footer a { color: var(--muted); }
 .admin-login input { color: var(--fg); font-size: 1rem; padding: 0.55rem 0.65rem; }
 .admin-login p { margin: 0; }
 .admin-login button { padding: 0.6rem; }
-
-/* Bearbeiten */
-.overlay {
-  position: fixed; inset: 0; background: rgba(15, 18, 22, 0.45); display: flex; align-items: flex-start; justify-content: center;
-  padding: max(4vh, env(safe-area-inset-top, 0px)) 12px 12px; overflow-y: auto; z-index: 10;
-}
-.editor { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1.25rem; width: min(760px, 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
-.editor h2 { color: var(--fg); font-size: 1.05rem; text-transform: none; letter-spacing: 0; margin-bottom: 1rem; }
-.editor .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.8rem; }
-.editor label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--muted); font-size: 0.8rem; }
-.editor label input, .editor label select, .editor label textarea { color: var(--fg); font-size: 0.9rem; }
-.editor .wide { grid-column: 1 / -1; }
-.editor .pair { display: flex; gap: 0.4rem; }
-.editor .pair input { width: 4.5rem; }
-.editor .pair select { flex: 1; }
-.editor .calc { margin: 1rem 0; padding: 0.6rem 0.8rem; background: var(--surface); border-radius: 6px; }
-.editor .calc strong { color: var(--fg); }
-.editor .hint { font-size: 0.75rem; }
-.editor-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-.editor-actions .spacer { flex: 1; }
 
 /* Handy: Karten – oben Status-Badge + Leistung, darunter Projekt · Kosten · Frist */
 @media (max-width: 760px) {
@@ -179,5 +175,13 @@ body:has(.admin) footer a { color: var(--muted); }
   .abos tr.group td.c-cost { display: none; }
   .abos tr.child { margin-left: 0.8rem; }
   .abos tr.child td.c-service { padding-left: 0; }
+  .abos tr.detail { padding: 0.5rem 0.75rem; margin-top: -0.4rem; border-top: 0; border-radius: 0 0 8px 8px; }
+  .abos tr.detail::before { display: none; }
+  .abos tr.detail td, .abos tr.detail.child td { padding: 0; width: 100%; }
+  .abos tr.detail dl { grid-template-columns: 1fr 1fr; }
+  .abos tr.expanded { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .soon { padding: 0.65rem 0.75rem; }
+  .soon .when { min-width: 0; }
+  .soon .what { flex-basis: 100%; }
   .mobile-sort { display: block; }
 }

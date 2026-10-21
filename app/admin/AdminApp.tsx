@@ -25,13 +25,13 @@ type Row = Abo & {
 type SortKey = "project" | "service" | "perMonth" | "deadline" | "state";
 
 const COLUMNS: { key: SortKey | null; label: string; className: string }[] = [
+  { key: "state", label: "Status", className: "c-state" },
   { key: "service", label: "Leistung", className: "c-service" },
   { key: "project", label: "Projekt", className: "c-project" },
   { key: null, label: "Kosten", className: "c-cost num" },
   { key: "perMonth", label: "€/Mon.", className: "c-month num" },
   { key: null, label: "€/Jahr", className: "c-year num" },
   { key: "deadline", label: "Kündigen bis", className: "c-deadline" },
-  { key: "state", label: "Vertrag", className: "c-state" },
 ];
 
 function toRow(a: Abo, today: string): Row {
@@ -76,7 +76,7 @@ type Group = { key: string; label: string; rows: Row[] };
 
 export default function AdminApp({ initial, today }: { initial: Abo[]; today: string }) {
   const [items, setItems] = useState<Abo[]>(initial);
-  const [filter, setFilter] = useState({ project: "", provider: "", state: "", q: "" });
+  const [filter, setFilter] = useState({ project: "", provider: "", state: "offen", q: "" });
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "deadline", dir: 1 });
   const [editing, setEditing] = useState<Abo | "new" | null>(null);
   const [error, setError] = useState("");
@@ -106,7 +106,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
     return rows
       .filter((r) => (!filter.project || r.project === filter.project)
         && (!filter.provider || r.provider === filter.provider)
-        && (!filter.state || r.state.kind === filter.state)
+        && (filter.state === "alle" || (filter.state === "offen" ? r.state.kind !== "beendet" : r.state.kind === filter.state))
         && (!q || [r.project, r.provider, r.service, r.contractNo, r.note].join(" ").toLowerCase().includes(q)))
       .sort((a, b) => compare(a, b, sort.key) * sort.dir || compare(a, b, "project") || compare(a, b, "service"));
   }, [rows, filter, sort]);
@@ -143,6 +143,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
     for (const r of rows) groups.set(r.project, [...(groups.get(r.project) ?? []), r]);
     return [...groups.entries()]
       .map(([project, list]) => ({ project, t: totals(list), total: list.length }))
+      .filter((p) => p.t.count > 0)
       .sort((a, b) => (b.t.perYear.EUR ?? 0) - (a.t.perYear.EUR ?? 0) || a.project.localeCompare(b.project, "de"));
   }, [rows]);
 
@@ -186,7 +187,8 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
   const renderRow = (r: Row, inGroup: boolean) => {
     const d = r.deadline ? daysBetween(today, r.deadline) : null;
     return (
-      <tr key={r.id} onClick={() => setEditing(r)} className={`${r.state.kind !== "laeuft" ? "inactive" : ""} ${inGroup ? "child" : ""}`}>
+      <tr key={r.id} onClick={() => setEditing(r)} className={`state-${r.state.kind} ${inGroup ? "child" : ""}`}>
+        <td className="c-state"><Badge state={r.state} /></td>
         <td className="c-service" title={[r.service, details(r)].filter(Boolean).join("\n")}>
           <button type="button" className="link" onClick={(e) => { e.stopPropagation(); setEditing(r); }}>
             {!inGroup && r.provider && <span className="muted">{r.provider} · </span>}
@@ -204,7 +206,6 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
           {r.deadline ? <>{formatShort(r.deadline)}{d! <= SOON && <span className="per"> {inDays(d!)}</span>}</>
             : r.state.kind === "laeuft" ? <span className="muted">{termLabel(r.term)}</span> : <span className="muted">–</span>}
         </td>
-        <td className="c-state"><Badge state={r.state} /></td>
       </tr>
     );
   };
@@ -221,6 +222,11 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
     return (
       <Fragment key={g.key}>
         <tr className="group" onClick={() => toggleGroup(g.key)} aria-expanded={isOpen}>
+          <td className="c-state">
+            {c.laeuft > 0 && <span className="badge laeuft">{c.laeuft} {c.laeuft === 1 ? "läuft" : "laufen"}</span>}
+            {c.gekuendigt > 0 && <span className="badge gekuendigt">{c.gekuendigt} gekündigt</span>}
+            {c.beendet > 0 && <span className="badge beendet">{c.beendet} beendet</span>}
+          </td>
           <td className="c-service">
             <button type="button" className="link group-toggle" onClick={(e) => { e.stopPropagation(); toggleGroup(g.key); }} aria-expanded={isOpen}>
               <span className="caret" aria-hidden="true">{isOpen ? "▾" : "▸"}</span> {g.label}
@@ -234,11 +240,6 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
           <td className={`c-deadline ${urgency(d)} ${next ? "has-date" : ""}`}>
             {next ? <>{formatShort(next.deadline)}<span className="per"> {d! <= SOON ? inDays(d!) : "nächste"}</span></> : <span className="muted">–</span>}
           </td>
-          <td className="c-state">
-            {c.laeuft > 0 && <span className="badge laeuft">{c.laeuft} läuft</span>}
-            {c.gekuendigt > 0 && <span className="badge gekuendigt">{c.gekuendigt} gekündigt</span>}
-            {c.beendet > 0 && <span className="badge beendet">{c.beendet} beendet</span>}
-          </td>
         </tr>
         {isOpen && g.rows.map((r) => renderRow(r, true))}
       </Fragment>
@@ -248,7 +249,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
   return (
     <div className="admin">
       <header className="admin-head">
-        <h1>abos<span>_</span></h1>
+        <h1>Abos &amp; laufende Kosten</h1>
         <div className="admin-actions">
           <button type="button" className="primary" onClick={() => setEditing("new")}>+ neuer Eintrag</button>
           <a className="button" href="/admin/api/export" download>CSV-Export</a>
@@ -265,14 +266,18 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
       {info && <p className="admin-info" role="status">{info}</p>}
 
       <section className="tiles" aria-label="Summen">
-        <div><span>pro Monat (laufend)</span><strong>{formatSums(sum.perMonth)}</strong></div>
-        <div><span>pro Jahr (laufend)</span><strong>{formatSums(sum.perYear)}</strong></div>
-        <div><span>Verträge</span><strong>{counts.laeuft} <small className="inline">laufen</small>{counts.gekuendigt > 0 && <> · {counts.gekuendigt} <small className="inline">gekündigt</small></>}</strong></div>
+        <div><span>pro Monat · nur laufende</span><strong>{formatSums(sum.perMonth)}</strong></div>
+        <div><span>pro Jahr · nur laufende</span><strong>{formatSums(sum.perYear)}</strong></div>
+        <div className="tile-states"><span>Verträge</span><strong>
+          <span className="badge laeuft">{counts.laeuft} laufen</span>
+          <span className="badge gekuendigt">{counts.gekuendigt} gekündigt</span>
+          <span className="badge beendet">{counts.beendet} beendet</span>
+        </strong></div>
         {sum.missing > 0 && <div className="warn"><span>ohne Kostenangabe</span><strong>{sum.missing}</strong></div>}
       </section>
 
       <section className="soon" aria-label="Kündigungsfristen">
-        <h2>{"// "}Frist läuft ab – nächste {SOON} Tage</h2>
+        <h2>Frist läuft ab – nächste {SOON} Tage</h2>
         {soon.length === 0 ? (
           <p className="muted">Keine Kündigungsfrist in den nächsten {SOON} Tagen.</p>
         ) : (
@@ -294,7 +299,8 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
 
       <section className="filters" aria-label="Filter">
         <select value={filter.state} onChange={(e) => setFilter({ ...filter, state: e.target.value })} aria-label="Vertrag">
-          <option value="">alle Verträge</option>
+          <option value="offen">laufende + gekündigte</option>
+          <option value="alle">alle (auch beendete)</option>
           <option value="laeuft">nur laufende</option>
           <option value="gekuendigt">nur gekündigte</option>
           <option value="beendet">nur beendete</option>
@@ -347,7 +353,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
       </div>
 
       <section className="per-project" aria-label="Summen pro Projekt">
-        <h2>{"// "}pro Projekt (laufende Verträge)</h2>
+        <h2>pro Projekt (laufende Verträge)</h2>
         <div className="table-wrap">
           <table>
             <thead><tr><th>Projekt</th><th className="num">/ Monat</th><th className="num">/ Jahr</th><th className="num">Verträge</th></tr></thead>

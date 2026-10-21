@@ -99,8 +99,12 @@ async function promoteImage(p, s) {
   const old = await liveContainers(p);
   const tag = s.devImage.split(":").pop();
   // Projekte mit festem Containernamen (Cronjobs!) laufen erst als „…-next“ und werden danach umbenannt
-  const name = p.fixedName ? `${p.fixedName}-next` : `${p.liveService}-${tag}`;
-  await docker("rm", "-f", name).catch(() => {});
+  let name = p.fixedName ? `${p.fixedName}-next` : `${p.liveService}-${tag}`;
+  // Läuft genau dieser Stand schon live (Button zweimal gedrückt), den laufenden Container nicht wegräumen,
+  // sondern den neuen unter anderem Namen starten – sonst ist live kurz weg und „docker stop“ findet ihn nicht mehr.
+  const existing = await docker("ps", "-aq", "--no-trunc", "--filter", `name=^${name}$`).catch(() => "");
+  if (existing && old.some((c) => existing.startsWith(c))) name = `${name}-${Date.now().toString(36)}`;
+  else await docker("rm", "-f", name).catch(() => {});
   const id = (await docker("run", "-d", "--name", name, "--network", "kamal", "--restart", "unless-stopped",
     "--log-opt", "max-size=5m", "--log-opt", "max-file=2", ...(p.runArgs || []), ...envFromFiles(p),
     "--label", `service=${p.liveService}`, "--label", "role=web", s.devImage)).slice(0, 12);
@@ -111,7 +115,8 @@ async function promoteImage(p, s) {
   await docker("exec", "kamal-proxy", "kamal-proxy", "deploy", p.liveService, "--target", `${id}:${p.port}`,
     ...p.hosts.flatMap((h) => ["--host", h]), "--tls", "--health-check-path", p.healthPath || "/up");
   const stop = old.filter((c) => !id.startsWith(c) && !c.startsWith(id));
-  if (stop.length) await docker("stop", ...stop);
+  // einzeln und fehlertolerant: ein schon entfernter Container darf den erfolgreichen Deploy nicht als Fehler melden
+  for (const c of stop) await docker("stop", c).catch(() => {});
   if (p.fixedName) {
     await docker("rm", "-f", `${p.fixedName}-prev`).catch(() => {});
     if (await docker("ps", "-aq", "--filter", `name=^${p.fixedName}$`)) await docker("rename", p.fixedName, `${p.fixedName}-prev`);

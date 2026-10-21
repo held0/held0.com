@@ -49,7 +49,8 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <h1>
-        held0<span>_</span>
+        {/* versteckter Zugang zur Abo-Übersicht: der blinkende Unterstrich */}
+        held0<a className="cursor" href="/admin" rel="nofollow" tabIndex={-1} aria-hidden="true">_</a>
       </h1>
       <ul>
         {projects.map((p) => (

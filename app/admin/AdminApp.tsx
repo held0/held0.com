@@ -2,18 +2,14 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import {
-  CURRENCIES, INTERVALS, NOTICE_UNITS, STATUSES, computeTerm, contractEnd, contractState, daysBetween, formatDate, formatMoney,
-  formatShort, formatSums, groupOf, monthlyCost, noticeLabel, termLabel, totals, yearlyCost, type Abo, type ContractState,
-  type Interval, type Term,
+  computeTerm, contractState, daysBetween, formatDate, formatEUR, formatMoney, formatShort, groupOf, monthlyCost, noticeLabel,
+  termLabel, toEUR, totals, type Abo, type ContractState, type Interval, type Term, type Totals,
 } from "../../lib/admin/calc";
 
-const KNOWN_PROJECTS = [
-  "allgemein", "held0", "myveryown", "checkfirma", "cinenow", "watchsoon", "vokalreim", "imposter", "fahrtrichtung",
-  "diary", "palestineflag",
-];
-const KNOWN_PROVIDERS = ["Strato", "Hetzner", "Anthropic", "Migadu", "Decodo", "Apple", "Google"];
-const SOON = 60; // Tage: „Frist läuft ab“
-const URGENT = 14;
+// Nur Anzeige: Die Daten pflegt der Assistent direkt in der Datei auf dem Server.
+const SOON = 60; // Tage: Kündigungsfrist hervorheben
+const URGENT = 14; // Tage: rot
+const MIN_DEADLINES = 3; // so viele kommende Fristen immer zeigen, auch wenn später
 const OPEN_KEY = "held0-admin-open-groups";
 
 const PER: Record<Interval, string> = { monat: "/Mon.", quartal: "/Quart.", halbjahr: "/Halbj.", jahr: "/Jahr", "2jahre": "/2 J.", einmalig: "einmalig" };
@@ -21,7 +17,7 @@ const PER: Record<Interval, string> = { monat: "/Mon.", quartal: "/Quart.", halb
 type Row = Abo & {
   term: Term; state: ContractState; perMonth: number | null; perYear: number | null; deadline: string | null; renewal: string | null;
   group: { key: string; label: string };
-};
+}; // perMonth/perYear in Euro (umgerechnet)
 type SortKey = "project" | "service" | "perMonth" | "deadline" | "state";
 
 const COLUMNS: { key: SortKey | null; label: string; className: string }[] = [
@@ -36,8 +32,10 @@ const COLUMNS: { key: SortKey | null; label: string; className: string }[] = [
 
 function toRow(a: Abo, today: string): Row {
   const term = computeTerm(a, today);
+  const m = monthlyCost(a);
+  const perMonth = m == null ? null : toEUR(m, a.currency);
   return {
-    ...a, cancelledOn: a.cancelledOn ?? null, term, state: contractState(a, today), perMonth: monthlyCost(a), perYear: yearlyCost(a),
+    ...a, cancelledOn: a.cancelledOn ?? null, term, state: contractState(a, today), perMonth, perYear: perMonth == null ? null : perMonth * 12,
     deadline: term.kind === "laufend" ? term.deadline : null,
     renewal: term.kind === "laufend" ? term.nextRenewal : null,
     group: groupOf(a),
@@ -55,17 +53,25 @@ function compare(a: Row, b: Row, key: SortKey): number {
 }
 
 const inDays = (n: number) => (n === 0 ? "heute" : n === 1 ? "morgen" : `in ${n} T.`);
+const inDaysLong = (n: number) => (n === 0 ? "heute" : n === 1 ? "morgen" : `in ${n} Tagen`);
 const urgency = (d: number | null) => (d == null ? "" : d <= URGENT ? "urgent" : d <= SOON ? "warn" : "");
+const eur = (value: number | null, r: Row) => formatEUR(value, r.currency !== "EUR" && !!value);
+const sumText = (t: Totals, key: "perMonth" | "perYear") => formatEUR(t[key], t.converted);
 
-function details(r: Row): string {
-  return [
-    r.contractNo && `Nr. ${r.contractNo}`,
-    r.start && `Beginn ${formatDate(r.start)}`,
-    r.renewal && `nächste Verlängerung ${formatDate(r.renewal)}`,
-    r.term.kind === "laufend" && `Kündigung wirksam zum ${formatDate(r.term.periodEnd)}`,
-    noticeLabel(r) && `Frist ${noticeLabel(r)}`,
-    r.cancelledOn && `gekündigt am ${formatDate(r.cancelledOn)}`,
-  ].filter(Boolean).join(" · ");
+/** Angaben für die aufgeklappte Detailzeile (nur befüllte). */
+function details(r: Row): [string, string][] {
+  const list: [string, string | false | null | undefined][] = [
+    ["Leistung", [r.provider, r.service].filter(Boolean).join(" · ")],
+    ["Vertragsnr.", r.contractNo],
+    ["Beginn", r.start && formatDate(r.start)],
+    ["nächste Verlängerung", r.renewal && formatDate(r.renewal)],
+    ["Kündigung wirksam zum", r.term.kind === "laufend" && formatDate(r.term.periodEnd)],
+    ["Laufzeit", termLabel(r.term)],
+    ["Frist", noticeLabel(r)],
+    ["gekündigt am", r.cancelledOn && formatDate(r.cancelledOn)],
+    ["Notiz", r.note],
+  ];
+  return list.filter((x): x is [string, string] => !!x[1]);
 }
 
 function Badge({ state }: { state: ContractState }) {
@@ -75,13 +81,10 @@ function Badge({ state }: { state: ContractState }) {
 type Group = { key: string; label: string; rows: Row[] };
 
 export default function AdminApp({ initial, today }: { initial: Abo[]; today: string }) {
-  const [items, setItems] = useState<Abo[]>(initial);
   const [filter, setFilter] = useState({ project: "", provider: "", state: "offen", q: "" });
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "deadline", dir: 1 });
-  const [editing, setEditing] = useState<Abo | "new" | null>(null);
-  const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
   const [open, setOpen] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   // aufgeklappte Gruppen merken (nur in diesem Browser)
   useEffect(() => {
@@ -97,7 +100,16 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
     return next;
   });
 
-  const rows = useMemo(() => items.map((a) => toRow(a, today)), [items, today]);
+  const toggleRow = (id: string) => setExpanded((x) => (x === id ? null : id));
+  /** aus der Fristenliste: Gruppe aufklappen, Zeile aufklappen und hinscrollen */
+  const showRow = (r: Row) => {
+    setFilter((f) => ({ ...f, state: f.state === "offen" || f.state === "alle" || f.state === r.state.kind ? f.state : "offen" }));
+    setOpen((list) => (list.includes(r.group.key) ? list : [...list, r.group.key]));
+    setExpanded(r.id);
+    requestAnimationFrame(() => document.getElementById(`abo-${r.id}`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
+  };
+
+  const rows = useMemo(() => initial.map((a) => toRow(a, today)), [initial, today]);
   const projects = useMemo(() => [...new Set(rows.map((r) => r.project))].sort((a, b) => a.localeCompare(b, "de")), [rows]);
   const providers = useMemo(() => [...new Set(rows.map((r) => r.provider).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de")), [rows]);
 
@@ -122,91 +134,71 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
     return [...map.values()];
   }, [visible]);
 
-  const sum = useMemo(() => totals(items), [items]);
-  const visibleSum = useMemo(() => totals(visible), [visible]);
-  const filtered = visible.length !== rows.length;
+  // Kacheln und Fristen gelten für Projekt/Anbieter/Suche (der Vertragsfilter blendet nur Tabellenzeilen aus –
+  // Summen zählen ohnehin nur laufende Verträge)
+  const scoped = useMemo(() => {
+    const q = filter.q.trim().toLowerCase();
+    return rows.filter((r) => (!filter.project || r.project === filter.project)
+      && (!filter.provider || r.provider === filter.provider)
+      && (!q || [r.project, r.provider, r.service, r.contractNo, r.note].join(" ").toLowerCase().includes(q)));
+  }, [rows, filter]);
+  const scope = [filter.project, filter.provider, filter.q.trim() && `„${filter.q.trim()}“`].filter(Boolean).join(" · ");
+  const sum = useMemo(() => totals(scoped), [scoped]);
   const counts = useMemo(() => {
     const c = { laeuft: 0, gekuendigt: 0, beendet: 0 };
-    for (const r of rows) c[r.state.kind]++;
+    for (const r of scoped) c[r.state.kind]++;
     return c;
-  }, [rows]);
+  }, [scoped]);
 
-  const soon = useMemo(
-    () => rows
-      .filter((r) => r.state.kind === "laeuft" && r.deadline && daysBetween(today, r.deadline) <= SOON)
-      .sort((a, b) => compare(a, b, "deadline")),
-    [rows, today],
-  );
-
-  const byProject = useMemo(() => {
-    const groups = new Map<string, Abo[]>();
-    for (const r of rows) groups.set(r.project, [...(groups.get(r.project) ?? []), r]);
-    return [...groups.entries()]
-      .map(([project, list]) => ({ project, t: totals(list), total: list.length }))
-      .filter((p) => p.t.count > 0)
-      .sort((a, b) => (b.t.perYear.EUR ?? 0) - (a.t.perYear.EUR ?? 0) || a.project.localeCompare(b.project, "de"));
-  }, [rows]);
+  // Kündigungsfristen: alles in den nächsten SOON Tagen, mindestens aber die nächsten MIN_DEADLINES
+  const deadlines = useMemo(() => {
+    const all = scoped
+      .filter((r) => r.state.kind === "laeuft" && r.deadline)
+      .sort((a, b) => compare(a, b, "deadline") || compare(a, b, "project"));
+    const soon = all.filter((r) => daysBetween(today, r.deadline!) <= SOON);
+    return soon.length >= MIN_DEADLINES ? soon : all.slice(0, MIN_DEADLINES);
+  }, [scoped, today]);
 
   const toggleSort = (key: SortKey) => setSort((s) => (s.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: 1 }));
-
-  async function save(data: Abo, isNew: boolean) {
-    setError("");
-    const res = await fetch(isNew ? "/admin/api/abos" : `/admin/api/abos/${encodeURIComponent(data.id)}`, {
-      method: isNew ? "POST" : "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (res.status === 401) { location.href = "/admin/login"; return false; }
-    if (!res.ok) { setError(`Speichern fehlgeschlagen (${res.status}). Seite neu laden und erneut versuchen.`); return false; }
-    const saved = (await res.json()) as Abo;
-    setItems((list) => (isNew ? [...list, saved] : list.map((a) => (a.id === saved.id ? saved : a))));
-    return true;
-  }
-
-  async function importFile(file: File) {
-    setError(""); setInfo("");
-    let body: unknown;
-    try { body = JSON.parse(await file.text()); } catch { setError("Die Datei ist kein gültiges JSON."); return; }
-    const res = await fetch("/admin/api/backup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (!res.ok) { setError(`Import fehlgeschlagen (${res.status}).`); return; }
-    const r = (await res.json()) as { added: number; updated: number; items: Abo[] };
-    setItems(r.items);
-    setInfo(`Import: ${r.added} neu, ${r.updated} aktualisiert.`);
-  }
-
-  async function remove(id: string) {
-    setError("");
-    const res = await fetch(`/admin/api/abos/${encodeURIComponent(id)}`, { method: "DELETE" });
-    if (!res.ok && res.status !== 404) { setError(`Löschen fehlgeschlagen (${res.status}).`); return false; }
-    setItems((list) => list.filter((a) => a.id !== id));
-    return true;
-  }
 
   const searching = filter.q.trim() !== "";
 
   const renderRow = (r: Row, inGroup: boolean) => {
     const d = r.deadline ? daysBetween(today, r.deadline) : null;
+    const isExpanded = expanded === r.id;
     return (
-      <tr key={r.id} onClick={() => setEditing(r)} className={`state-${r.state.kind} ${inGroup ? "child" : ""}`}>
+      <Fragment key={r.id}>
+      <tr id={`abo-${r.id}`} onClick={() => toggleRow(r.id)}
+        className={`state-${r.state.kind} ${inGroup ? "child" : ""} ${isExpanded ? "expanded" : ""}`}>
         <td className="c-state"><Badge state={r.state} /></td>
-        <td className="c-service" title={[r.service, details(r)].filter(Boolean).join("\n")}>
-          <button type="button" className="link" onClick={(e) => { e.stopPropagation(); setEditing(r); }}>
+        <td className="c-service">
+          <button type="button" className="link" aria-expanded={isExpanded} onClick={(e) => { e.stopPropagation(); toggleRow(r.id); }}>
             {!inGroup && r.provider && <span className="muted">{r.provider} · </span>}
             {r.service || "—"}
           </button>
-          {r.note && <span className="note" title={r.note} aria-label={`Notiz: ${r.note}`}>ⓘ</span>}
+          {r.note && <span className="note" aria-hidden="true">ⓘ</span>}
         </td>
         <td className="c-project">{r.project}</td>
         <td className="c-cost num">
           {r.amount == null ? <span className="muted">?</span> : <>{formatMoney(r.amount, r.currency)}<span className="per">{PER[r.interval]}</span></>}
         </td>
-        <td className="c-month num">{formatMoney(r.perMonth, r.currency)}</td>
-        <td className="c-year num">{formatMoney(r.perYear, r.currency)}</td>
+        <td className="c-month num">{eur(r.perMonth, r)}</td>
+        <td className="c-year num">{eur(r.perYear, r)}</td>
         <td className={`c-deadline ${urgency(d)} ${r.deadline ? "has-date" : ""}`}>
           {r.deadline ? <>{formatShort(r.deadline)}{d! <= SOON && <span className="per"> {inDays(d!)}</span>}</>
             : r.state.kind === "laeuft" ? <span className="muted">{termLabel(r.term)}</span> : <span className="muted">–</span>}
         </td>
       </tr>
+      {isExpanded && (
+        <tr className={`detail ${inGroup ? "child" : ""}`}>
+          <td colSpan={COLUMNS.length}>
+            <dl>
+              {details(r).map(([k, v]) => <div key={k} className={k === "Notiz" || k === "Leistung" ? "wide" : ""}><dt>{k}</dt><dd>{v}</dd></div>)}
+            </dl>
+          </td>
+        </tr>
+      )}
+      </Fragment>
     );
   };
 
@@ -235,8 +227,8 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
           </td>
           <td className="c-project muted">{projectsInGroup.size === 1 ? g.rows[0].project : `${projectsInGroup.size} Projekte`}</td>
           <td className="c-cost num muted">{t.missing ? `${t.missing}× ?` : ""}</td>
-          <td className="c-month num">{t.count > t.missing ? formatSums(t.perMonth) : <span className="muted">?</span>}</td>
-          <td className="c-year num">{t.count > t.missing ? formatSums(t.perYear) : <span className="muted">?</span>}</td>
+          <td className="c-month num">{t.count > t.missing ? sumText(t, "perMonth") : <span className="muted">?</span>}</td>
+          <td className="c-year num">{t.count > t.missing ? sumText(t, "perYear") : <span className="muted">?</span>}</td>
           <td className={`c-deadline ${urgency(d)} ${next ? "has-date" : ""}`}>
             {next ? <>{formatShort(next.deadline)}<span className="per"> {d! <= SOON ? inDays(d!) : "nächste"}</span></> : <span className="muted">–</span>}
           </td>
@@ -251,24 +243,14 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
       <header className="admin-head">
         <h1>Abos &amp; laufende Kosten</h1>
         <div className="admin-actions">
-          <button type="button" className="primary" onClick={() => setEditing("new")}>+ neuer Eintrag</button>
-          <a className="button" href="/admin/api/export" download>CSV-Export</a>
-          <a className="button" href="/admin/api/backup" download>JSON-Sicherung</a>
-          <label className="button">
-            Import
-            <input type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) importFile(f); }} />
-          </label>
           <form method="post" action="/admin/api/logout"><button type="submit" className="ghost">Abmelden</button></form>
         </div>
       </header>
 
-      {error && <p className="admin-error" role="alert">{error}</p>}
-      {info && <p className="admin-info" role="status">{info}</p>}
-
       <section className="tiles" aria-label="Summen">
-        <div><span>pro Monat · nur laufende</span><strong>{formatSums(sum.perMonth)}</strong></div>
-        <div><span>pro Jahr · nur laufende</span><strong>{formatSums(sum.perYear)}</strong></div>
-        <div className="tile-states"><span>Verträge</span><strong>
+        <div><span>pro Monat · {scope || "nur laufende"}</span><strong>{sumText(sum, "perMonth")}</strong></div>
+        <div><span>pro Jahr · {scope || "nur laufende"}</span><strong>{sumText(sum, "perYear")}</strong></div>
+        <div className="tile-states"><span>Verträge{scope && ` · ${scope}`}</span><strong>
           <span className="badge laeuft">{counts.laeuft} laufen</span>
           <span className="badge gekuendigt">{counts.gekuendigt} gekündigt</span>
           <span className="badge beendet">{counts.beendet} beendet</span>
@@ -277,18 +259,19 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
       </section>
 
       <section className="soon" aria-label="Kündigungsfristen">
-        <h2>Frist läuft ab – nächste {SOON} Tage</h2>
-        {soon.length === 0 ? (
-          <p className="muted">Keine Kündigungsfrist in den nächsten {SOON} Tagen.</p>
+        <h2>Kündigungsfristen{scope && ` · ${scope}`}</h2>
+        {deadlines.length === 0 ? (
+          <p className="muted">Keine anstehenden Kündigungsfristen bei laufenden Verträgen.</p>
         ) : (
           <ul>
-            {soon.map((r) => {
+            {deadlines.map((r) => {
               const d = daysBetween(today, r.deadline!);
               return (
-                <li key={r.id} className={d <= URGENT ? "urgent" : "warn"}>
-                  <button type="button" className="link" onClick={() => setEditing(r)}>
-                    <strong>{formatShort(r.deadline)}</strong> ({inDays(d)}) · {r.service || r.provider} · {r.project}
-                    {r.renewal && <span className="muted"> – sonst Verlängerung am {formatShort(r.renewal)}</span>}
+                <li key={r.id} className={urgency(d) || "later"}>
+                  <button type="button" className="link" onClick={() => showRow(r)}>
+                    <span className="when"><strong>{formatShort(r.deadline)}</strong> <span className="days">{inDaysLong(d)}</span></span>
+                    <span className="what">{r.service || r.provider} <span className="muted">· {r.project}</span></span>
+                    {r.renewal && <span className="else muted">sonst Verlängerung am {formatShort(r.renewal)}</span>}
                   </button>
                 </li>
               );
@@ -321,11 +304,6 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
           ])}
         </select>
         <input type="search" placeholder="suchen …" value={filter.q} onChange={(e) => setFilter({ ...filter, q: e.target.value })} aria-label="Suche" />
-        {filtered && (
-          <span className="muted">
-            {visible.length} von {rows.length} · {formatSums(visibleSum.perMonth)}/Mon. · {formatSums(visibleSum.perYear)}/Jahr
-          </span>
-        )}
       </section>
 
       <div className="table-wrap">
@@ -352,159 +330,6 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
         </table>
       </div>
 
-      <section className="per-project" aria-label="Summen pro Projekt">
-        <h2>pro Projekt (laufende Verträge)</h2>
-        <div className="table-wrap">
-          <table>
-            <thead><tr><th>Projekt</th><th className="num">/ Monat</th><th className="num">/ Jahr</th><th className="num">Verträge</th></tr></thead>
-            <tbody>
-              {byProject.map(({ project, t, total }) => (
-                <tr key={project}>
-                  <td><button type="button" className="link" onClick={() => setFilter({ ...filter, project })}>{project}</button></td>
-                  <td className="num">{t.count > t.missing ? formatSums(t.perMonth) : <span className="muted">?</span>}</td>
-                  <td className="num">{t.count > t.missing ? formatSums(t.perYear) : <span className="muted">?</span>}</td>
-                  <td className="num">{t.count}{total > t.count ? <small> (+{total - t.count} gekündigt/beendet)</small> : ""}{t.missing ? <small className="warn"> · {t.missing} ohne Kosten</small> : ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {editing && (
-        <Editor
-          abo={editing === "new" ? null : editing}
-          projects={[...new Set([...KNOWN_PROJECTS, ...projects])]}
-          providers={[...new Set([...KNOWN_PROVIDERS, ...providers])]}
-          today={today}
-          onClose={() => setEditing(null)}
-          onSave={async (a, isNew) => (await save(a, isNew)) && setEditing(null)}
-          onDelete={async (id) => (await remove(id)) && setEditing(null)}
-        />
-      )}
-    </div>
-  );
-}
-
-// ---------- Formular ----------
-
-type Form = Record<Exclude<keyof Abo, "id">, string>;
-
-const toForm = (a: Abo | null): Form => ({
-  project: a?.project ?? "", provider: a?.provider ?? "", service: a?.service ?? "", contractNo: a?.contractNo ?? "",
-  start: a?.start ?? "", amount: a?.amount == null ? "" : String(a.amount).replace(".", ","), currency: a?.currency ?? "EUR",
-  interval: a?.interval ?? "monat", minTermMonths: a?.minTermMonths == null ? "" : String(a.minTermMonths),
-  renewalMonths: a?.renewalMonths == null ? "" : String(a.renewalMonths), noticeValue: a?.noticeValue == null ? "" : String(a.noticeValue),
-  noticeUnit: a?.noticeUnit ?? "monate", status: a?.status ?? "aktiv", endDate: a?.endDate ?? "", cancelledOn: a?.cancelledOn ?? "",
-  note: a?.note ?? "",
-});
-
-const numOrNull = (s: string) => {
-  const n = Number(s.replace(",", ".").trim());
-  return s.trim() === "" || !Number.isFinite(n) ? null : n;
-};
-
-function fromForm(f: Form, id: string): Abo {
-  return {
-    id, project: f.project.trim() || "allgemein", provider: f.provider.trim(), service: f.service.trim(), contractNo: f.contractNo.trim(),
-    start: f.start || null, amount: numOrNull(f.amount), currency: f.currency, interval: f.interval as Abo["interval"],
-    minTermMonths: numOrNull(f.minTermMonths), renewalMonths: numOrNull(f.renewalMonths), noticeValue: numOrNull(f.noticeValue),
-    noticeUnit: f.noticeUnit as Abo["noticeUnit"], status: f.status as Abo["status"], endDate: f.endDate || null, cancelledOn: f.cancelledOn || null, note: f.note.trim(),
-  };
-}
-
-function Editor({ abo, projects, providers, today, onClose, onSave, onDelete }: {
-  abo: Abo | null; projects: string[]; providers: string[]; today: string;
-  onClose: () => void; onSave: (a: Abo, isNew: boolean) => Promise<unknown>; onDelete: (id: string) => Promise<unknown>;
-}) {
-  const [f, setF] = useState<Form>(() => toForm(abo));
-  const [busy, setBusy] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const set = (k: keyof Form) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
-
-  const preview = fromForm(f, abo?.id ?? "neu");
-  const term = computeTerm(preview, today);
-  const perMonth = monthlyCost(preview);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    await onSave(preview, !abo);
-    setBusy(false);
-  }
-
-  return (
-    <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()} onKeyDown={(e) => e.key === "Escape" && onClose()}>
-      <form className="editor" onSubmit={submit} role="dialog" aria-modal="true" aria-label={abo ? "Eintrag bearbeiten" : "Neuer Eintrag"}>
-        <h2>{abo ? "Eintrag bearbeiten" : "Neuer Eintrag"}</h2>
-        <div className="grid">
-          <label>Projekt<input list="dl-projects" value={f.project} onChange={set("project")} placeholder="allgemein" autoFocus /></label>
-          <label>Anbieter<input list="dl-providers" value={f.provider} onChange={set("provider")} required /></label>
-          <label className="wide">Leistung<input value={f.service} onChange={set("service")} placeholder="z. B. Domainpaket .app – myveryown.app" required /></label>
-          <label>Vertrags-/Auftragsnr.<input value={f.contractNo} onChange={set("contractNo")} /></label>
-          <label>Beginn<input type="date" value={f.start} onChange={set("start")} /></label>
-          <label>Kosten<input inputMode="decimal" value={f.amount} onChange={set("amount")} placeholder="unbekannt" /></label>
-          <label>Währung
-            <select value={f.currency} onChange={set("currency")}>{CURRENCIES.map((c) => <option key={c}>{c}</option>)}</select>
-          </label>
-          <label>Intervall
-            <select value={f.interval} onChange={set("interval")}>{Object.entries(INTERVALS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}</select>
-          </label>
-          <label>Mindestlaufzeit (Monate)<input inputMode="numeric" value={f.minTermMonths} onChange={set("minTermMonths")} placeholder="0 = keine" /></label>
-          <label>Verlängert sich um (Monate)<input inputMode="numeric" value={f.renewalMonths} onChange={set("renewalMonths")} placeholder="0 = keine" /></label>
-          <label>Kündigungsfrist zum Laufzeitende
-            <span className="pair">
-              <input inputMode="numeric" value={f.noticeValue} onChange={set("noticeValue")} placeholder="?" />
-              <select value={f.noticeUnit} onChange={set("noticeUnit")}>{Object.entries(NOTICE_UNITS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-            </span>
-          </label>
-          <label>Status
-            <select value={f.status} onChange={set("status")}>{Object.entries(STATUSES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-          </label>
-          {f.status !== "aktiv" && <label>Gekündigt am<input type="date" value={f.cancelledOn} onChange={set("cancelledOn")} /></label>}
-          {f.status !== "aktiv" && (
-            <label>Endet am <span className="hint">(leer = berechnet)</span>
-              <input type="date" value={f.endDate} onChange={set("endDate")} />
-            </label>
-          )}
-          <label className="wide">Notiz<textarea rows={2} value={f.note} onChange={set("note")} /></label>
-        </div>
-        <datalist id="dl-projects">{projects.map((p) => <option key={p} value={p} />)}</datalist>
-        <datalist id="dl-providers">{providers.map((p) => <option key={p} value={p} />)}</datalist>
-
-        <p className="calc">
-          {perMonth != null && preview.interval !== "einmalig" && <>{formatMoney(perMonth, preview.currency)} / Monat · {formatMoney(perMonth * 12, preview.currency)} / Jahr<br /></>}
-          {term.kind === "laufend" ? (
-            <>
-              Nächste Verlängerung: <strong>{formatDate(term.nextRenewal)}</strong> · spätestens kündigen bis{" "}
-              <strong>{formatDate(term.deadline)}</strong> (wirksam zum {formatDate(term.periodEnd)})
-              {term.noticeMissing && <span className="warn"> – Frist fehlt, gerechnet ohne Frist</span>}
-            </>
-          ) : term.kind === "auslaufend" ? (
-            <>Läuft ohne Verlängerung aus am <strong>{formatDate(term.end)}</strong>.</>
-          ) : term.kind === "jederzeit" ? (
-            <>Jederzeit kündbar{noticeLabel(preview) && preview.noticeValue ? ` (Frist ${noticeLabel(preview)})` : ""}.</>
-          ) : term.kind === "unbekannt" ? (
-            <span className="muted">Kündigungsdatum: {term.reason}.</span>
-          ) : (
-            <>Vertrag: <strong>{contractState(preview, today).label}</strong>
-              {!preview.endDate && contractEnd(preview) && <span className="muted"> (Ende berechnet aus „gekündigt am“)</span>}
-              {preview.status === "gekuendigt" && !contractEnd(preview) && <span className="warn"> – „gekündigt am“ oder „Endet am“ eintragen</span>}
-            </>
-          )}
-        </p>
-
-        <div className="editor-actions">
-          {abo && (confirmDelete ? (
-            <button type="button" className="danger" onClick={() => onDelete(abo.id)}>wirklich löschen</button>
-          ) : (
-            <button type="button" className="ghost" onClick={() => setConfirmDelete(true)}>löschen</button>
-          ))}
-          <span className="spacer" />
-          <button type="button" className="ghost" onClick={onClose}>abbrechen</button>
-          <button type="submit" className="primary" disabled={busy}>{busy ? "speichert …" : "speichern"}</button>
-        </div>
-      </form>
     </div>
   );
 }

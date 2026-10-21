@@ -199,25 +199,29 @@ export function formatMoney(value: number | null, currency: string): string {
   }
 }
 
-export type Totals = { perMonth: Record<string, number>; perYear: Record<string, number>; missing: number; count: number };
+// Summen immer in Euro: andere Währungen grob umgerechnet (Stand Oktober 2026, grob).
+export const EUR_RATES: Record<string, number> = { EUR: 1, USD: 0.86, GBP: 1.15, CHF: 1.07 };
+export const toEUR = (value: number, currency: string) => value * (EUR_RATES[currency] ?? 1);
 
-/** Summen laufender Kosten (nur aktive Verträge), getrennt nach Währung. */
+/** Euro-Betrag; „≈“ davor, wenn umgerechnet wurde. */
+export const formatEUR = (value: number | null, converted = false) =>
+  value == null ? "" : `${converted ? "≈ " : ""}${formatMoney(value, "EUR")}`;
+
+export type Totals = { perMonth: number; perYear: number; converted: boolean; missing: number; count: number };
+
+/** Summen laufender Kosten (nur aktive Verträge) in Euro. */
 export function totals(items: Abo[]): Totals {
-  const t: Totals = { perMonth: {}, perYear: {}, missing: 0, count: 0 };
+  const t: Totals = { perMonth: 0, perYear: 0, converted: false, missing: 0, count: 0 };
   for (const a of items) {
     if (a.status !== "aktiv") continue;
     t.count++;
     const m = monthlyCost(a);
     if (m == null) { t.missing++; continue; }
-    t.perMonth[a.currency] = (t.perMonth[a.currency] ?? 0) + m;
-    t.perYear[a.currency] = (t.perYear[a.currency] ?? 0) + m * 12;
+    if (a.currency !== "EUR" && m !== 0) t.converted = true;
+    t.perMonth += toEUR(m, a.currency);
+    t.perYear += toEUR(m, a.currency) * 12;
   }
   return t;
-}
-
-export function formatSums(sums: Record<string, number>): string {
-  const keys = Object.keys(sums).sort((x, y) => (x === "EUR" ? -1 : y === "EUR" ? 1 : x.localeCompare(y)));
-  return keys.length ? keys.map((c) => formatMoney(sums[c], c)).join(" + ") : formatMoney(0, "EUR");
 }
 
 // ---------- Prüfen von Eingaben (Server) ----------

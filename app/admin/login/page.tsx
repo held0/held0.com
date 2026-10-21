@@ -17,7 +17,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const message = hinweis ? MESSAGES[hinweis] : undefined;
   return (
     <div className="admin admin-login">
-      <h1>admin<span>_</span></h1>
+      <h1>held0 admin</h1>
       <form method="post" action="/admin/api/login">
         <label>
           Benutzer

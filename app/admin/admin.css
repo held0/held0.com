@@ -1,141 +1,181 @@
-/* /admin – im Stil der Startseite (Tannengrün & Mint, Monospace), aber breit und dicht für Tabellen */
-body:has(.admin) { padding-top: 32px; }
+/* /admin – eigenes, schlichtes Design (hell, neutral, Systemschrift); die Startseite behält ihre grüne Terminal-Optik.
+   Die Farbvariablen der Startseite werden hier für /admin überschrieben. Dunkel automatisch per prefers-color-scheme. */
+html:has(.admin) { color-scheme: light dark; }
+body:has(.admin) {
+  --bg: #f7f7f5; --panel: #ffffff; --surface: #f0f0ed; --fg: #1f2328; --muted: #5d636b; --line: #dcdcd7; --line-strong: #c4c4bd;
+  --accent: #1f5fbf; --accent-fg: #ffffff;
+  --ok: #17663a; --ok-bg: #e3f3e8; --warn: #8a4b00; --warn-bg: #fdebc8; --urgent: #b42318; --urgent-bg: #fde4e1;
+  --end: #5d636b; --end-bg: #ececea;
+  background: var(--bg); color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  padding: 32px 24px 24px;
+}
+@media (prefers-color-scheme: dark) {
+  body:has(.admin) {
+    --bg: #17181a; --panel: #1f2023; --surface: #26282b; --fg: #e8e9eb; --muted: #a3a8b0; --line: #34363a; --line-strong: #46494e;
+    --accent: #7fb0ff; --accent-fg: #0d1a2e;
+    --ok: #7dd89b; --ok-bg: #173523; --warn: #ffc56b; --warn-bg: #3d2a0c; --urgent: #ff9a8f; --urgent-bg: #43191a;
+    --end: #a3a8b0; --end-bg: #2c2e31;
+  }
+}
 main:has(.admin) { width: 100%; max-width: 1280px; }
+body:has(.admin) footer a { color: var(--muted); }
 
-.admin { --line: #1f3a2c; --surface: #12231a; --warn: #e8c66a; --urgent: #ff8f7e; font-size: 0.85rem; }
+.admin { font-size: 0.9rem; line-height: 1.45; }
 .admin .muted { color: var(--muted); }
 .admin .warn { color: var(--warn); }
 .admin .urgent { color: var(--urgent); }
-.admin small { display: block; color: var(--muted); font-size: 0.75rem; }
-.admin h2 { font-size: 0.85rem; font-weight: 400; color: var(--muted); margin: 0 0 0.6rem; }
+.admin small { display: block; color: var(--muted); font-size: 0.78rem; }
+.admin h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+.admin h2 { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 0.6rem; }
+.admin table, .admin .num, .tiles strong { font-variant-numeric: tabular-nums; }
 
-.admin-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
-.admin-head h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0; }
-.admin-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.admin-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.admin-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.admin-actions form { margin: 0; }
 
 .admin button, .admin .button, .admin input, .admin select, .admin textarea { font: inherit; color: inherit; }
 .admin button, .admin .button {
-  background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 0.45rem 0.8rem; cursor: pointer; text-decoration: none;
+  background: var(--panel); border: 1px solid var(--line-strong); border-radius: 6px; padding: 0.4rem 0.75rem; cursor: pointer;
+  text-decoration: none; line-height: 1.3;
 }
 .admin button:hover, .admin .button:hover { border-color: var(--accent); }
-.admin button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+.admin button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
 .admin button.primary:disabled { opacity: 0.6; }
 .admin button.danger { border-color: var(--urgent); color: var(--urgent); }
-.admin button.ghost { color: var(--muted); }
-.admin button.link { border: 0; padding: 0; text-align: left; color: var(--accent); }
+.admin button.ghost { background: transparent; color: var(--muted); }
+.admin button.link { background: none; border: 0; padding: 0; text-align: left; color: var(--accent); }
 .admin button.link:hover { text-decoration: underline; }
 .admin button:focus-visible, .admin input:focus-visible, .admin select:focus-visible, .admin textarea:focus-visible, .admin .button:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 1px;
 }
-
-.admin-info { border: 1px solid var(--line); color: var(--accent); padding: 0.6rem 0.8rem; border-radius: 6px; }
 .admin label.button { display: inline-block; }
-.admin-error { border: 1px solid var(--urgent); color: var(--urgent); padding: 0.6rem 0.8rem; border-radius: 6px; }
 
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.6rem; margin-bottom: 1.5rem; }
-.tiles div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem 1rem; }
-.tiles span { display: block; color: var(--muted); font-size: 0.75rem; margin-bottom: 0.3rem; }
-.tiles strong { font-size: 1.25rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+.admin-info { border: 1px solid var(--line); background: var(--panel); padding: 0.6rem 0.8rem; border-radius: 6px; }
+.admin-error { border: 1px solid var(--urgent); background: var(--urgent-bg); color: var(--urgent); padding: 0.6rem 0.8rem; border-radius: 6px; }
+
+/* Kacheln */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.6rem; margin-bottom: 1.5rem; }
+.tiles > div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem 1rem; }
+.tiles > div > span { display: block; color: var(--muted); font-size: 0.78rem; margin-bottom: 0.25rem; }
+.tiles strong { font-size: 1.3rem; font-weight: 650; }
 .tiles .warn strong { color: var(--warn); }
+.tiles .tile-states strong { display: flex; flex-wrap: wrap; gap: 0.3rem; font-size: 0.85rem; padding-top: 0.2rem; }
+.tiles .tile-states .badge + .badge { margin-left: 0; }
 
+/* Frist läuft ab */
 .soon { margin-bottom: 1.5rem; }
-.soon ul { display: grid; gap: 0.35rem; }
-.soon li { border-left: 3px solid var(--warn); padding: 0.35rem 0.7rem; background: var(--surface); border-radius: 0 6px 6px 0; }
+.soon ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
+.soon li { border: 1px solid var(--line); border-left: 4px solid var(--warn); padding: 0.4rem 0.75rem; background: var(--panel); border-radius: 6px; }
 .soon li.urgent { border-left-color: var(--urgent); }
-.soon li button.link { color: inherit; }
-.soon li.warn button.link strong { color: var(--warn); }
-.soon li.urgent button.link strong { color: var(--urgent); }
+.soon li button.link { color: var(--fg); }
+.soon li.warn strong { color: var(--warn); }
+.soon li.urgent strong { color: var(--urgent); }
 .soon p { margin: 0; }
 
-.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.8rem; }
+/* Filter */
+.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
 .admin input, .admin select, .admin textarea {
-  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.45rem 0.6rem; min-width: 0;
+  background: var(--panel); border: 1px solid var(--line-strong); border-radius: 6px; padding: 0.4rem 0.55rem; min-width: 0;
 }
 .filters input[type="search"] { flex: 1 1 12rem; }
+.mobile-sort { display: none; }
 
-.table-wrap { overflow-x: auto; }
-.admin table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-.admin th, .admin td { text-align: left; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.admin th { color: var(--muted); font-weight: 400; white-space: nowrap; font-size: 0.75rem; }
-.admin th button { border: 0; padding: 0; color: inherit; }
+/* Tabellen */
+.table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+.admin table { border-collapse: collapse; width: 100%; }
+.admin th, .admin td { text-align: left; padding: 0.35rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.admin tbody tr:last-child td { border-bottom: 0; }
+.admin th { color: var(--muted); font-weight: 600; font-size: 0.78rem; white-space: nowrap; background: var(--surface); }
+.admin th button { background: none; border: 0; padding: 0; color: inherit; font-weight: inherit; }
 .admin th button:hover { color: var(--fg); }
 .admin .num { text-align: right; white-space: nowrap; }
-.admin small.inline { display: inline; font-size: 0.75rem; font-weight: 400; }
+.admin small.inline { display: inline; }
 
-/* Übersichtstabelle: eine Zeile pro Vertrag, lange Texte abgeschnitten (voller Text im Tooltip/Dialog) */
-.abos { font-size: 0.8rem; }
+.abos { font-size: 0.85rem; }
 .abos tbody tr { cursor: pointer; }
 .abos tbody tr:hover { background: var(--surface); }
-.abos tr.inactive > td:not(.c-state) { opacity: 0.55; }
 .abos td { white-space: nowrap; }
 .abos td.c-service { max-width: 26rem; overflow: hidden; text-overflow: ellipsis; }
 .abos td.c-service button.link { display: inline; white-space: nowrap; }
-.abos td.c-project { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; }
-.abos .per { color: var(--muted); font-size: 0.7rem; margin-left: 0.15rem; }
+.abos td.c-project { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.abos .per { color: var(--muted); font-size: 0.75rem; margin-left: 0.15rem; }
 .abos .note { color: var(--muted); margin-left: 0.4rem; cursor: help; }
-.abos tr.group { background: var(--surface); }
-.abos tr.group td { border-bottom-color: #2a4a39; }
-.abos tr.group .group-toggle { color: var(--fg); font-weight: 600; }
-.abos .caret { display: inline-block; width: 0.9rem; color: var(--accent); }
-.abos tr.child td.c-service { padding-left: 1.6rem; }
-.badge { display: inline-block; font-size: 0.7rem; padding: 0.05rem 0.4rem; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+
+/* gekündigt/beendet: zurückgenommen, beendet mit durchgestrichenem Betrag */
+.abos tr.state-gekuendigt td:not(.c-state), .abos tr.state-beendet td:not(.c-state) { color: var(--muted); }
+.abos tr.state-gekuendigt td.c-service button.link, .abos tr.state-beendet td.c-service button.link { color: var(--muted); }
+.abos tr.state-beendet td.c-cost, .abos tr.state-beendet td.c-month, .abos tr.state-beendet td.c-year { text-decoration: line-through; }
+
+/* Gruppen */
+.abos tr.group, .abos tr.group:hover { background: var(--surface); }
+.abos tr.group .group-toggle { color: var(--fg); font-weight: 650; }
+.abos .caret { display: inline-block; width: 0.9rem; color: var(--muted); }
+.abos tr.child td.c-service { padding-left: 1.7rem; }
+
+/* Status-Badges */
+.badge { display: inline-block; font-size: 0.75rem; font-weight: 600; line-height: 1.5; padding: 0 0.5rem; border-radius: 999px; white-space: nowrap; }
 .badge + .badge { margin-left: 0.25rem; }
-.badge.laeuft { color: var(--accent); border-color: #2f6b4b; }
-.badge.gekuendigt { color: var(--bg); background: var(--warn); border-color: var(--warn); font-weight: 600; }
-.badge.beendet { color: var(--muted); border-color: var(--line); }
+.badge.laeuft { color: var(--ok); background: var(--ok-bg); }
+.badge.gekuendigt { color: var(--warn); background: var(--warn-bg); }
+.badge.beendet { color: var(--end); background: var(--end-bg); }
+.abos td.c-state { width: 1%; }
 
-.mobile-sort { display: none; }
-.admin-actions form { margin: 0; }
+.per-project { margin: 2rem 0 1rem; max-width: 46rem; }
+.per-project .table-wrap { font-size: 0.85rem; }
 
-.admin-login { width: min(22rem, 100%); margin: 8vh auto 0; }
-.admin-login h1 { font-size: 2rem; margin: 0 0 1.5rem; }
+/* Anmeldung */
+.admin-login { width: min(22rem, 100%); margin: 8vh auto 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1.5rem; }
+.admin-login h1 { font-size: 1.3rem; margin: 0 0 1.25rem; }
 .admin-login form { display: grid; gap: 0.9rem; }
-.admin-login label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--muted); font-size: 0.75rem; }
-.admin-login input { color: var(--fg); font-size: 1rem; padding: 0.6rem 0.7rem; }
+.admin-login label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--muted); font-size: 0.8rem; }
+.admin-login input { color: var(--fg); font-size: 1rem; padding: 0.55rem 0.65rem; }
 .admin-login p { margin: 0; }
 .admin-login button { padding: 0.6rem; }
-.per-project { margin: 2rem 0 1rem; max-width: 46rem; }
 
+/* Bearbeiten */
 .overlay {
-  position: fixed; inset: 0; background: rgba(5, 12, 8, 0.75); display: flex; align-items: flex-start; justify-content: center;
+  position: fixed; inset: 0; background: rgba(15, 18, 22, 0.45); display: flex; align-items: flex-start; justify-content: center;
   padding: max(4vh, env(safe-area-inset-top, 0px)) 12px 12px; overflow-y: auto; z-index: 10;
 }
-.editor { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 1.2rem; width: min(760px, 100%); }
-.editor h2 { color: var(--fg); font-size: 1rem; margin-bottom: 1rem; }
+.editor { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1.25rem; width: min(760px, 100%); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
+.editor h2 { color: var(--fg); font-size: 1.05rem; text-transform: none; letter-spacing: 0; margin-bottom: 1rem; }
 .editor .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.8rem; }
-.editor label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--muted); font-size: 0.75rem; }
-.editor label input, .editor label select, .editor label textarea { color: var(--fg); font-size: 0.85rem; }
+.editor label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--muted); font-size: 0.8rem; }
+.editor label input, .editor label select, .editor label textarea { color: var(--fg); font-size: 0.9rem; }
 .editor .wide { grid-column: 1 / -1; }
 .editor .pair { display: flex; gap: 0.4rem; }
 .editor .pair input { width: 4.5rem; }
 .editor .pair select { flex: 1; }
-.editor .calc { margin: 1rem 0; line-height: 1.6; padding: 0.6rem 0.8rem; background: var(--surface); border-radius: 6px; }
-.editor .calc strong { color: var(--accent); }
+.editor .calc { margin: 1rem 0; padding: 0.6rem 0.8rem; background: var(--surface); border-radius: 6px; }
+.editor .calc strong { color: var(--fg); }
+.editor .hint { font-size: 0.75rem; }
 .editor-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .editor-actions .spacer { flex: 1; }
 
-.editor .hint { font-size: 0.7rem; }
-
-/* Handy: knappe Karten (Leistung + Vertrag oben, darunter Projekt · Kosten · Frist) */
+/* Handy: Karten – oben Status-Badge + Leistung, darunter Projekt · Kosten · Frist */
 @media (max-width: 760px) {
   body:has(.admin) { padding: 20px 14px; }
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .tiles .tile-states { grid-column: 1 / -1; }
+  .tiles strong { font-size: 1.05rem; }
+  .table-wrap:has(.abos) { background: none; border: 0; overflow: visible; }
   .abos thead { display: none; }
   .abos, .abos tbody { display: block; width: 100%; }
-  .abos tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 0.4rem; padding: 0.45rem 0.7rem; }
+  .abos tr { display: flex; flex-wrap: wrap; align-items: center; gap: 0.2rem 0.6rem; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 0.4rem; padding: 0.5rem 0.75rem; }
+  .abos tr.group { background: var(--surface); }
   .abos td { display: block; border: 0; padding: 0; max-width: none; }
-  .abos td.c-service { flex: 1 1 60%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .abos td.c-state { flex: none; margin-left: auto; }
-  .abos td.c-project, .abos td.c-cost, .abos td.c-deadline { order: 2; font-size: 0.75rem; text-align: left; }
+  .abos tbody tr:last-child td { border: 0; }
+  .abos td.c-state { width: auto; flex: none; }
+  .abos td.c-service { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .abos tr::before { content: ""; flex-basis: 100%; height: 0; order: 1; } /* Zeilenumbruch vor Projekt/Kosten/Frist */
-  .abos td.c-project { color: var(--muted); }
+  .abos td.c-project, .abos td.c-cost, .abos td.c-deadline { order: 2; font-size: 0.8rem; text-align: left; }
   .abos td.c-deadline:not(.has-date) { display: none; }
-  .abos td.c-deadline::before { content: "bis "; color: var(--muted); }
-  .tiles { grid-template-columns: 1fr 1fr; }
-  .tiles strong { font-size: 1rem; }
-  .tiles div { padding: 0.6rem 0.7rem; }
+  .abos td.c-deadline::before { content: "kündigen bis "; color: var(--muted); }
   .abos td.c-month, .abos td.c-year { display: none; }
-  .abos tr.group td.c-month { display: block; order: 2; font-size: 0.75rem; }
-  .abos tr.group td.c-month::after { content: "/Mon."; color: var(--muted); font-size: 0.7rem; }
+  .abos tr.group td.c-state { order: 2; }
+  .abos tr.group td.c-month { display: block; order: 2; font-size: 0.8rem; }
+  .abos tr.group td.c-month::after { content: "/Mon."; color: var(--muted); font-size: 0.75rem; }
   .abos tr.group td.c-cost { display: none; }
   .abos tr.child { margin-left: 0.8rem; }
   .abos tr.child td.c-service { padding-left: 0; }

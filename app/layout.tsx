@@ -16,11 +16,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <main>{children}</main>
         <footer>
-          <Link href="/impressum">impressum · datenschutz</Link>
+          <Link href="/impressum" prefetch={false}>impressum · datenschutz</Link>
         </footer>
-        {/* „Live deployen“-Button nur auf dev-Seiten (Dienst hängt dort unter /__deploy) */}
+        {/* „Live deployen“-Button nur auf dev-Seiten (nicht in /admin – dort gilt das dev-Passwort nicht) (Dienst hängt dort unter /__deploy) */}
         <Script id="dev-deploy" strategy="afterInteractive">
-          {`if(location.hostname.indexOf("dev.")===0){var s=document.createElement("script");s.src="/__deploy/button.js";document.body.appendChild(s)}`}
+          {`if(location.hostname.indexOf("dev.")===0&&location.pathname.indexOf("/admin")!==0){var s=document.createElement("script");s.src="/__deploy/button.js";document.body.appendChild(s)}`}
         </Script>
         {/* Statistik (Umami) – nicht auf den internen /admin-Seiten */}
         <Script id="stats" strategy="afterInteractive">

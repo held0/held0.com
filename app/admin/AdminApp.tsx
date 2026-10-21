@@ -99,6 +99,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+    if (res.status === 401) { location.href = "/admin/login"; return false; }
     if (!res.ok) { setError(`Speichern fehlgeschlagen (${res.status}). Seite neu laden und erneut versuchen.`); return false; }
     const saved = (await res.json()) as Abo;
     setItems((list) => (isNew ? [...list, saved] : list.map((a) => (a.id === saved.id ? saved : a))));
@@ -136,6 +137,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
             Import
             <input type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) importFile(f); }} />
           </label>
+          <form method="post" action="/admin/api/logout"><button type="submit" className="ghost">Abmelden</button></form>
         </div>
       </header>
 

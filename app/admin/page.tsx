@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { checkAdmin } from "../../lib/admin/auth";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { COOKIE, LOGIN_PATH, verifySession } from "../../lib/admin/auth";
 import { listAbos } from "../../lib/admin/store";
 import { todayBerlin } from "../../lib/admin/calc";
 import AdminApp from "./AdminApp";
@@ -15,8 +16,6 @@ export const metadata: Metadata = {
 
 export default async function AdminPage() {
   // proxy.ts prüft bereits; hier nur zur Sicherheit noch einmal
-  if (checkAdmin((await headers()).get("authorization")) !== "ok") {
-    return <p className="admin">Kein Zugriff.</p>;
-  }
+  if (!(await verifySession((await cookies()).get(COOKIE)?.value))) redirect(LOGIN_PATH);
   return <AdminApp initial={await listAbos()} today={todayBerlin()} />;
 }

@@ -70,6 +70,15 @@ main:has(.admin) { width: 100%; max-width: 1280px; }
 .status.beendet { color: var(--muted); }
 
 .mobile-sort { display: none; }
+.admin-actions form { margin: 0; }
+
+.admin-login { width: min(22rem, 100%); margin: 8vh auto 0; }
+.admin-login h1 { font-size: 2rem; margin: 0 0 1.5rem; }
+.admin-login form { display: grid; gap: 0.9rem; }
+.admin-login label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--muted); font-size: 0.75rem; }
+.admin-login input { color: var(--fg); font-size: 1rem; padding: 0.6rem 0.7rem; }
+.admin-login p { margin: 0; }
+.admin-login button { padding: 0.6rem; }
 .per-project { margin: 2rem 0 1rem; max-width: 46rem; }
 
 .overlay {

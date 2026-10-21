@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { notFoundMarkdown } from "./app/agent-text";
-import { ADMIN_REALM, UNCONFIGURED_TEXT, checkAdmin, isAdminPath } from "./lib/admin/auth";
+import { COOKIE, LOGIN_PATH, PUBLIC_ADMIN_PATHS, UNCONFIGURED_TEXT, isAdminPath, isConfigured, verifySession } from "./lib/admin/auth";
 
 // Nur in der Dev-Vorschau gesetzt (deploy.sh dev): Passwortschutz + kein Index.
 const auth = process.env.BASIC_AUTH;
@@ -32,49 +32,46 @@ function route(request: NextRequest, dev: boolean): NextResponse {
   return NextResponse.next();
 }
 
-// Gegen Durchprobieren von Passwörtern: höchstens 10 Fehlversuche je IP in 15 Minuten.
-const failures = new Map<string, { count: number; since: number }>();
-const WINDOW = 15 * 60 * 1000;
-function clientIp(request: NextRequest) {
-  return (request.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "?";
-}
-function blocked(ip: string) {
-  const f = failures.get(ip);
-  return !!f && Date.now() - f.since < WINDOW && f.count >= 10;
-}
-function fail(ip: string) {
-  const f = failures.get(ip);
-  if (!f || Date.now() - f.since >= WINDOW) failures.set(ip, { count: 1, since: Date.now() });
-  else f.count++;
-  if (failures.size > 5000) failures.clear();
-}
-
 const privateHeaders = { "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store" };
-
-// /admin (Seite und API): eigenes Admin-Passwort – auf held0.com und auf dev.held0.com.
-function admin(request: NextRequest): NextResponse {
-  const ip = clientIp(request);
-  if (blocked(ip)) return new NextResponse("Zu viele Fehlversuche – bitte später erneut.", { status: 429, headers: privateHeaders });
-  const result = checkAdmin(request.headers.get("authorization"));
-  if (result === "unconfigured") return new NextResponse(UNCONFIGURED_TEXT, { status: 503, headers: privateHeaders });
-  if (result === "denied") {
-    const header = request.headers.get("authorization");
-    // Das dev-Passwort schickt der Browser auf dev.held0.com von selbst mit – kein Fehlversuch
-    if (header && !(auth && header === `Basic ${btoa(auth)}`)) fail(ip);
-    return new NextResponse("Passwort erforderlich", { status: 401, headers: { ...privateHeaders, "WWW-Authenticate": ADMIN_REALM } });
-  }
-  const res = NextResponse.next();
+const withPrivate = (res: NextResponse) => {
   for (const [k, v] of Object.entries(privateHeaders)) res.headers.set(k, v);
   return res;
+};
+
+// Weiterleitung mit dem Schema, das der Browser sieht (hinter kamal-proxy: X-Forwarded-Proto)
+function redirect(request: NextRequest, to: string) {
+  const proto = (request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "")).split(",")[0].trim();
+  const host = request.headers.get("host") ?? request.nextUrl.host;
+  return new NextResponse(null, { status: 303, headers: { ...privateHeaders, Location: `${proto}://${host}${to}` } });
 }
 
-export default function proxy(request: NextRequest) {
-  if (isAdminPath(request.nextUrl.pathname)) return admin(request);
-  if (!auth) return route(request, false);
+// /admin (Seiten und API): Anmeldung per Formular (/admin/login) + Sitzungs-Cookie – auf held0.com und dev.held0.com,
+// dort ohne das dev-Passwort davor.
+async function admin(request: NextRequest): Promise<NextResponse> {
+  const { pathname } = request.nextUrl;
+  if (!isConfigured()) return new NextResponse(UNCONFIGURED_TEXT, { status: 503, headers: privateHeaders });
+  const loggedIn = await verifySession(request.cookies.get(COOKIE)?.value);
+  if (PUBLIC_ADMIN_PATHS.has(pathname)) {
+    if (loggedIn && pathname === LOGIN_PATH) return redirect(request, "/admin");
+    return withPrivate(NextResponse.next());
+  }
+  if (loggedIn) return withPrivate(NextResponse.next());
+  if (pathname.startsWith("/admin/api/")) {
+    return withPrivate(NextResponse.json({ error: "Nicht angemeldet" }, { status: 401 }));
+  }
+  return redirect(request, LOGIN_PATH);
+}
 
-  // Auf dev genügt auch das Admin-Passwort (der Browser schickt nach /admin teils dieses mit).
-  const header = request.headers.get("authorization") ?? "";
-  if (header !== `Basic ${btoa(auth)}` && checkAdmin(header) !== "ok") {
+// Auf dev ohne dev-Passwort erreichbar: gebaute Dateien (Hash-Namen, keine Daten) – die braucht die Admin-Anmeldeseite.
+const devPublic = (pathname: string) => pathname.startsWith("/_next/static/") || pathname === "/icon.svg" || pathname === "/favicon.ico";
+
+export default async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (isAdminPath(pathname)) return admin(request);
+  if (!auth) return route(request, false);
+  if (devPublic(pathname)) return NextResponse.next();
+
+  if ((request.headers.get("authorization") ?? "") !== `Basic ${btoa(auth)}`) {
     return new NextResponse("Passwort erforderlich", {
       status: 401,
       headers: { "WWW-Authenticate": 'Basic realm="held0 dev"', "X-Robots-Tag": "noindex, nofollow" },

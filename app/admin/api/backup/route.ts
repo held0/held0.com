@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // Sicherung als JSON (z. B. um den dev-Stand nach live zu übernehmen) …
 export async function GET(request: Request) {
-  const denied = adminGuard(request);
+  const denied = await adminGuard(request);
   if (denied) return denied;
   return new Response(JSON.stringify({ version: 1, items: await listAbos() }, null, 2), {
     headers: {
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
 // … und wieder einlesen: gleiche id → ersetzt, sonst neu.
 export async function POST(request: Request) {
-  const denied = adminGuard(request);
+  const denied = await adminGuard(request);
   if (denied) return denied;
   const body = await request.json().catch(() => null);
   const items = Array.isArray(body) ? body : Array.isArray(body?.items) ? body.items : null;

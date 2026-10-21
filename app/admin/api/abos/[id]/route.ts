@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function PUT(request: Request, { params }: Ctx) {
-  const denied = adminGuard(request);
+  const denied = await adminGuard(request);
   if (denied) return denied;
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") return Response.json({ error: "Ungültige Daten" }, { status: 400 });
@@ -14,7 +14,7 @@ export async function PUT(request: Request, { params }: Ctx) {
 }
 
 export async function DELETE(request: Request, { params }: Ctx) {
-  const denied = adminGuard(request);
+  const denied = await adminGuard(request);
   if (denied) return denied;
   return (await deleteAbo((await params).id))
     ? new Response(null, { status: 204 })

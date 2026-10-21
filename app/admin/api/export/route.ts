@@ -13,7 +13,7 @@ const cell = (v: string | number | null) => {
 };
 
 export async function GET(request: Request) {
-  const denied = adminGuard(request);
+  const denied = await adminGuard(request);
   if (denied) return denied;
   const today = todayBerlin();
   const header = [

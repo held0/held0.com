@@ -3,6 +3,7 @@
 // Zwei Arten von Projekten (projects.json):
 //   type "image": startet exakt das Image, das gerade auf dev läuft, als Live-Container
 //                 (Healthcheck → kamal-proxy umschalten → alte Live-Container stoppen, bleiben für Rollback).
+//                 runArgs: zusätzliche docker-run-Argumente (Volumes …), envFiles: { VAR: Datei } → -e VAR=<Inhalt>.
 //   type "files": kopiert exakt den dev-Stand (Verzeichnis auf dem Server) nach live und startet neu;
 //                 der vorherige Live-Stand bleibt als <dir>.prev liegen.
 import http from "node:http";
@@ -80,6 +81,19 @@ async function healthy(url) {
   return false;
 }
 
+// Geheimnisse, die nur als Datei auf dem Server liegen (z. B. held0: ~/held0-admin.auth → ADMIN_AUTH).
+// Fehlt eine Datei, wird die Variable weggelassen (die App sperrt den Bereich dann selbst).
+function envFromFiles(p) {
+  return Object.entries(p.envFiles || {}).flatMap(([key, file]) => {
+    try {
+      const value = fs.readFileSync(file, "utf8").trim();
+      return value ? ["-e", `${key}=${value}`] : [];
+    } catch {
+      return [];
+    }
+  });
+}
+
 async function promoteImage(p, s) {
   if (!s.devImage) throw new Error("Auf dev läuft gerade kein Container.");
   const old = await liveContainers(p);
@@ -88,7 +102,7 @@ async function promoteImage(p, s) {
   const name = p.fixedName ? `${p.fixedName}-next` : `${p.liveService}-${tag}`;
   await docker("rm", "-f", name).catch(() => {});
   const id = (await docker("run", "-d", "--name", name, "--network", "kamal", "--restart", "unless-stopped",
-    "--log-opt", "max-size=5m", "--log-opt", "max-file=2", ...(p.runArgs || []),
+    "--log-opt", "max-size=5m", "--log-opt", "max-file=2", ...(p.runArgs || []), ...envFromFiles(p),
     "--label", `service=${p.liveService}`, "--label", "role=web", s.devImage)).slice(0, 12);
   if (!(await healthy(`http://${id}:${p.port}${p.healthPath || "/up"}`))) {
     await docker("rm", "-f", id).catch(() => {});

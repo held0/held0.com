@@ -15,8 +15,8 @@ DEVSHA="~/deploy-state/held0.dev-sha"   # zuletzt auf dev deployter Stand (+ Com
 # eine SSH-Verbindung für alle Schritte (viele Einzelverbindungen weist der Server teils ab)
 S() { ssh -o ControlMaster=auto -o ControlPath="/tmp/deploy-%C" -o ControlPersist=120 "$SERVER" "$@"; }
 case "$STAGE" in
-  dev)  SERVICE=held0-dev;            HOSTS="--host dev.held0.com" ;;
-  live) SERVICE=held0-portfolio-web;  HOSTS="--host held0.com --host www.held0.com" ;;
+  dev)  SERVICE=held0-dev;            HOSTS="--host dev.held0.com";                      VOLUME=held0-dev-data ;;
+  live) SERVICE=held0-portfolio-web;  HOSTS="--host held0.com --host www.held0.com";     VOLUME=held0-data ;;
   *)    echo "Aufruf: ./deploy.sh dev | live"; exit 1 ;;
 esac
 
@@ -40,6 +40,16 @@ if [ "$STAGE" = dev ]; then
   S "test -s ~/dev.auth" || { echo "~/dev.auth fehlt auf dem Server (Inhalt: dev:<passwort>) – bitte zuerst anlegen."; exit 1; }
   ENV='-e BASIC_AUTH="$(cat ~/dev.auth)"'
 fi
+# /admin (Abo-Übersicht): eigener Zugang, legt Niklas selbst an: ~/held0-admin.auth (benutzer:passwort).
+# Fehlt die Datei, läuft die Seite trotzdem – /admin antwortet dann mit 503.
+if S "test -s ~/held0-admin.auth"; then
+  ENV="$ENV"' -e ADMIN_AUTH="$(cat ~/held0-admin.auth)"'
+else
+  echo "! ~/held0-admin.auth fehlt auf dem Server – /admin bleibt gesperrt (503)."
+  echo "  Anlegen: ssh $SERVER 'umask 077; cat > ~/held0-admin.auth'  (eine Zeile benutzer:passwort, dann Strg-D) und erneut deployen."
+fi
+# Daten von /admin liegen im Volume $VOLUME (dev und live getrennt)
+ENV="$ENV -v $VOLUME:/app/data"
 
 echo "→ Container starten"
 NEW=$(S "docker rm -f $SERVICE-$SHA >/dev/null 2>&1; docker run -d --name $SERVICE-$SHA --network kamal --restart unless-stopped \

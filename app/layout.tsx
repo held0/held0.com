@@ -22,12 +22,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Script id="dev-deploy" strategy="afterInteractive">
           {`if(location.hostname.indexOf("dev.")===0){var s=document.createElement("script");s.src="/__deploy/button.js";document.body.appendChild(s)}`}
         </Script>
-        <Script
-          src="https://stats.held0.com/script.js"
-          data-website-id="b007ca44-f1cf-41b5-8535-c75c2552c78f"
-          data-domains="held0.com,www.held0.com"
-          strategy="afterInteractive"
-        />
+        {/* Statistik (Umami) – nicht auf den internen /admin-Seiten */}
+        <Script id="stats" strategy="afterInteractive">
+          {`if(location.pathname.indexOf("/admin")!==0){var s=document.createElement("script");s.src="https://stats.held0.com/script.js";s.defer=true;s.setAttribute("data-website-id","b007ca44-f1cf-41b5-8535-c75c2552c78f");s.setAttribute("data-domains","held0.com,www.held0.com");document.body.appendChild(s)}`}
+        </Script>
       </body>
     </html>
   );

@@ -2,12 +2,12 @@ import { SITE } from "../agent-text";
 
 export const dynamic = "force-static";
 
-// KI-Crawler ausdrücklich erlaubt; interne Pfade (Healthcheck, Deploy-Button, Design-Varianten) gesperrt.
+// KI-Crawler ausdrücklich erlaubt; interne Pfade (Healthcheck, Deploy-Button, Design-Varianten, Admin) gesperrt.
 const aiBots = [
   "GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-User",
   "Claude-SearchBot", "PerplexityBot", "Google-Extended",
 ];
-const disallow = ["/up", "/__deploy/", "/varianten"].map((p) => `Disallow: ${p}`).join("\n");
+const disallow = ["/up", "/__deploy/", "/varianten", "/admin"].map((p) => `Disallow: ${p}`).join("\n");
 
 const body = `# Projektliste von Niklas Held. Kurzfassung für KI-Assistenten: ${SITE}/llms.txt
 # Project list of Niklas Held. Summary for AI assistants: ${SITE}/llms.txt

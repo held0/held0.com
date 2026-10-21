@@ -1,0 +1,108 @@
+/* /admin – im Stil der Startseite (Tannengrün & Mint, Monospace), aber breit und dicht für Tabellen */
+body:has(.admin) { padding-top: 32px; }
+main:has(.admin) { width: 100%; max-width: 1280px; }
+
+.admin { --line: #1f3a2c; --surface: #12231a; --warn: #e8c66a; --urgent: #ff8f7e; font-size: 0.85rem; }
+.admin .muted { color: var(--muted); }
+.admin .warn { color: var(--warn); }
+.admin .urgent { color: var(--urgent); }
+.admin small { display: block; color: var(--muted); font-size: 0.75rem; }
+.admin h2 { font-size: 0.85rem; font-weight: 400; color: var(--muted); margin: 0 0 0.6rem; }
+
+.admin-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.admin-head h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0; }
+.admin-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+.admin button, .admin .button, .admin input, .admin select, .admin textarea { font: inherit; color: inherit; }
+.admin button, .admin .button {
+  background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 0.45rem 0.8rem; cursor: pointer; text-decoration: none;
+}
+.admin button:hover, .admin .button:hover { border-color: var(--accent); }
+.admin button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+.admin button.primary:disabled { opacity: 0.6; }
+.admin button.danger { border-color: var(--urgent); color: var(--urgent); }
+.admin button.ghost { color: var(--muted); }
+.admin button.link { border: 0; padding: 0; text-align: left; color: var(--accent); }
+.admin button.link:hover { text-decoration: underline; }
+.admin button:focus-visible, .admin input:focus-visible, .admin select:focus-visible, .admin textarea:focus-visible, .admin .button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+
+.admin-info { border: 1px solid var(--line); color: var(--accent); padding: 0.6rem 0.8rem; border-radius: 6px; }
+.admin label.button { display: inline-block; }
+.admin-error { border: 1px solid var(--urgent); color: var(--urgent); padding: 0.6rem 0.8rem; border-radius: 6px; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.6rem; margin-bottom: 1.5rem; }
+.tiles div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem 1rem; }
+.tiles span { display: block; color: var(--muted); font-size: 0.75rem; margin-bottom: 0.3rem; }
+.tiles strong { font-size: 1.25rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+.tiles .warn strong { color: var(--warn); }
+
+.soon { margin-bottom: 1.5rem; }
+.soon ul { display: grid; gap: 0.35rem; }
+.soon li { border-left: 3px solid var(--warn); padding: 0.35rem 0.7rem; background: var(--surface); border-radius: 0 6px 6px 0; }
+.soon li.urgent { border-left-color: var(--urgent); }
+.soon li button.link { color: inherit; }
+.soon li.warn button.link strong { color: var(--warn); }
+.soon li.urgent button.link strong { color: var(--urgent); }
+.soon p { margin: 0; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.8rem; }
+.admin input, .admin select, .admin textarea {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.45rem 0.6rem; min-width: 0;
+}
+.filters input[type="search"] { flex: 1 1 12rem; }
+
+.table-wrap { overflow-x: auto; }
+.admin table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.admin th, .admin td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.admin th { color: var(--muted); font-weight: 400; white-space: nowrap; }
+.admin th button { border: 0; padding: 0; color: inherit; }
+.admin th button:hover { color: var(--fg); }
+.admin .num { text-align: right; white-space: nowrap; }
+.abos tbody tr { cursor: pointer; }
+.abos tbody tr:hover { background: var(--surface); }
+.abos tr.inactive { opacity: 0.55; }
+.abos td.service { min-width: 14rem; }
+.status { white-space: nowrap; }
+.status.aktiv { color: var(--accent); }
+.status.gekuendigt { color: var(--warn); }
+.status.beendet { color: var(--muted); }
+
+.mobile-sort { display: none; }
+.per-project { margin: 2rem 0 1rem; max-width: 46rem; }
+
+.overlay {
+  position: fixed; inset: 0; background: rgba(5, 12, 8, 0.75); display: flex; align-items: flex-start; justify-content: center;
+  padding: max(4vh, env(safe-area-inset-top, 0px)) 12px 12px; overflow-y: auto; z-index: 10;
+}
+.editor { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 1.2rem; width: min(760px, 100%); }
+.editor h2 { color: var(--fg); font-size: 1rem; margin-bottom: 1rem; }
+.editor .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.8rem; }
+.editor label { display: flex; flex-direction: column; gap: 0.3rem; color: var(--muted); font-size: 0.75rem; }
+.editor label input, .editor label select, .editor label textarea { color: var(--fg); font-size: 0.85rem; }
+.editor .wide { grid-column: 1 / -1; }
+.editor .pair { display: flex; gap: 0.4rem; }
+.editor .pair input { width: 4.5rem; }
+.editor .pair select { flex: 1; }
+.editor .calc { margin: 1rem 0; line-height: 1.6; padding: 0.6rem 0.8rem; background: var(--surface); border-radius: 6px; }
+.editor .calc strong { color: var(--accent); }
+.editor-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.editor-actions .spacer { flex: 1; }
+
+/* Handy: Tabelle als Karten */
+@media (max-width: 760px) {
+  body:has(.admin) { padding: 20px 14px; }
+  .abos thead { display: none; }
+  .abos, .abos tbody, .abos tr, .abos td { display: block; width: 100%; }
+  .abos tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 0.6rem; padding: 0.3rem 0; }
+  .abos td { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; border: 0; padding: 0.25rem 0.8rem; }
+  .abos td::before { content: attr(data-label); color: var(--muted); flex: none; }
+  .abos td > span { text-align: right; min-width: 0; }
+  .abos td:has(> span:empty) { display: none; }
+  .abos td.service { min-width: 0; }
+  .abos td small { display: inline; margin-left: 0.4rem; }
+  .abos td.service small { display: block; margin: 0; }
+  .abos td.service button.link { text-align: right; }
+  .mobile-sort { display: block; }
+}

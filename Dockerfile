@@ -22,6 +22,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
+# Datenordner für /admin (Docker-Volume; neues Volume übernimmt diese Rechte)
+RUN mkdir data && chown nextjs:nodejs data
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs

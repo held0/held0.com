@@ -6,6 +6,13 @@
     "liveService": "held0-portfolio-web",
     "legacyLabel": "held0-portfolio",
     "port": 3000,
+    "runArgs": [
+      "-v",
+      "held0-data:/app/data"
+    ],
+    "envFiles": {
+      "ADMIN_AUTH": "/home/deploy/held0-admin.auth"
+    },
     "hosts": [
       "held0.com",
       "www.held0.com"

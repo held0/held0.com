@@ -1,7 +1,7 @@
 // Kurztest der Fristberechnung für /admin:  node scripts/test-abos.mjs
 // (Node ≥ 22.18 lädt die TypeScript-Datei direkt.)
 import assert from "node:assert/strict";
-import { computeTerm, addMonths, monthlyCost, totals } from "../lib/admin/calc.ts";
+import { computeTerm, addMonths, monthlyCost, totals, contractEnd, contractState, groupOf } from "../lib/admin/calc.ts";
 
 const base = { status: "aktiv", noticeUnit: "monate" };
 const check = (name, abo, today, expected) => {
@@ -45,3 +45,22 @@ assert.equal(t.perMonth.EUR, 6);
 assert.equal(t.perYear.EUR, 72);
 assert.equal(t.missing, 1);
 console.log("✓ Kosten und Summen");
+
+// 7. Gekündigt: Ende aus „gekündigt am“ (Kündigung 01.09.2027 kommt für die Laufzeit bis 19.10.2027 rechtzeitig)
+const dom = { status: "gekuendigt", start: "2026-10-20", minTermMonths: 12, renewalMonths: 12, noticeValue: 1, noticeUnit: "monate", endDate: null, provider: "Strato", service: "Domainpaket .de" };
+assert.equal(contractEnd({ ...dom, cancelledOn: "2027-09-01" }), "2027-10-19");
+// zu spät gekündigt (nach dem 19.09.2027) → erst zum Ende der nächsten Periode
+assert.equal(contractEnd({ ...dom, cancelledOn: "2027-09-25" }), "2028-10-19");
+// eingetragenes Ende hat Vorrang; ohne Datum kein Ende
+assert.equal(contractEnd({ ...dom, cancelledOn: "2027-09-01", endDate: "2027-12-31" }), "2027-12-31");
+assert.equal(contractEnd({ ...dom }), null);
+assert.equal(contractState({ ...dom, cancelledOn: "2027-09-01" }, "2026-10-21").label, "gekündigt zum 19.10.27");
+assert.equal(contractState({ ...dom, cancelledOn: "2027-09-01" }, "2027-11-01").kind, "beendet");
+assert.equal(contractState({ ...dom, status: "aktiv" }, "2026-10-21").label, "läuft");
+// gekündigte Verträge haben keine Kündigungsfrist mehr (keine Warnung)
+assert.equal(computeTerm(dom, "2026-10-21").kind, "inaktiv");
+console.log("✓ gekündigt / beendet");
+
+assert.equal(groupOf({ provider: "Strato", service: "Domainpaket .app – x" }).label, "Domains (Strato)");
+assert.equal(groupOf({ provider: "Hetzner", service: "Cloud-Server" }).label, "Hetzner");
+console.log("✓ Gruppen");

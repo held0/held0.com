@@ -35,7 +35,8 @@ export type Abo = {
   noticeValue: number | null; // Kündigungsfrist (zum Laufzeitende)
   noticeUnit: NoticeUnit;
   status: Status;
-  endDate: string | null; // bei „gekündigt“/„beendet“: Vertragsende
+  endDate: string | null; // bei „gekündigt“/„beendet“: Vertragsende (leer = aus „gekündigt am“ berechnet)
+  cancelledOn?: string | null; // Datum der Kündigung (optional; ältere Datensätze haben das Feld nicht)
   note: string;
 };
 
@@ -66,7 +67,9 @@ export function todayBerlin(): string {
   return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
 }
 
-export const formatDate = (s: string | null) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "");
+export const formatDate = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(0, 4)}` : "");
+/** Kurzform TT.MM.JJ für die Tabelle */
+export const formatShort = (s: string | null | undefined) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}.${s.slice(2, 4)}` : "");
 
 function subtractNotice(end: string, value: number, unit: NoticeUnit): string {
   if (unit === "monate") return addMonths(end, -value);
@@ -123,6 +126,39 @@ export function computeTerm(a: Pick<Abo, "status" | "start" | "minTermMonths" | 
     }
   }
   return { kind: "unbekannt", reason: "Laufzeit nicht berechenbar" };
+}
+
+// ---------- Vertragsstand: läuft / gekündigt zum … / beendet ----------
+
+/**
+ * Ende eines gekündigten Vertrags: eingetragenes „Endet am“; sonst aus „gekündigt am“ berechnet
+ * (das Laufzeitende, zu dem die Kündigung an diesem Tag noch rechtzeitig war).
+ */
+export function contractEnd(a: Abo): string | null {
+  if (a.endDate) return a.endDate;
+  if (a.status !== "gekuendigt" || !a.cancelledOn) return null;
+  const t = computeTerm({ ...a, status: "aktiv" }, a.cancelledOn);
+  if (t.kind === "laufend") return t.periodEnd;
+  if (t.kind === "auslaufend") return t.end;
+  return null;
+}
+
+export type ContractState = { kind: "laeuft" | "gekuendigt" | "beendet"; label: string; end: string | null };
+
+export function contractState(a: Abo, today: string): ContractState {
+  if (a.status === "aktiv") return { kind: "laeuft", label: "läuft", end: null };
+  const end = contractEnd(a);
+  // gekündigt und Ende erreicht → beendet
+  if (a.status === "beendet" || (end && end < today)) return { kind: "beendet", label: end ? `beendet ${formatShort(end)}` : "beendet", end };
+  return { kind: "gekuendigt", label: end ? `gekündigt zum ${formatShort(end)}` : "gekündigt", end };
+}
+
+// ---------- Gruppen (gleichartige Verträge zusammenfassen) ----------
+
+export function groupOf(a: Pick<Abo, "provider" | "service">): { key: string; label: string } {
+  const provider = a.provider.trim() || "ohne Anbieter";
+  const kind = /domain/i.test(a.service) ? "Domains" : "";
+  return { key: `${provider.toLowerCase()}|${kind}`, label: kind ? `${kind} (${provider})` : provider };
 }
 
 export function termLabel(t: Term): string {
@@ -215,6 +251,7 @@ export function sanitizeAbo(input: Record<string, unknown>, id: string): Abo {
     noticeUnit,
     status,
     endDate: isDate(input.endDate) ? input.endDate : null,
+    cancelledOn: isDate(input.cancelledOn) ? input.cancelledOn : null,
     note: str(input.note, 2000),
   };
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
-  CURRENCIES, INTERVALS, NOTICE_UNITS, STATUSES, computeTerm, daysBetween, formatDate, formatMoney, formatSums,
-  monthlyCost, noticeLabel, termLabel, totals, yearlyCost, type Abo, type Term,
+  CURRENCIES, INTERVALS, NOTICE_UNITS, STATUSES, computeTerm, contractEnd, contractState, daysBetween, formatDate, formatMoney,
+  formatShort, formatSums, groupOf, monthlyCost, noticeLabel, termLabel, totals, yearlyCost, type Abo, type ContractState,
+  type Interval, type Term,
 } from "../../lib/admin/calc";
 
 const KNOWN_PROJECTS = [
@@ -13,49 +14,88 @@ const KNOWN_PROJECTS = [
 const KNOWN_PROVIDERS = ["Strato", "Hetzner", "Anthropic", "Migadu", "Decodo", "Apple", "Google"];
 const SOON = 60; // Tage: „Frist läuft ab“
 const URGENT = 14;
+const OPEN_KEY = "held0-admin-open-groups";
 
-type Row = Abo & { term: Term; perMonth: number | null; perYear: number | null; deadline: string | null; renewal: string | null };
-type SortKey = "project" | "provider" | "service" | "start" | "perMonth" | "renewal" | "deadline" | "status";
+const PER: Record<Interval, string> = { monat: "/Mon.", quartal: "/Quart.", halbjahr: "/Halbj.", jahr: "/Jahr", "2jahre": "/2 J.", einmalig: "einmalig" };
 
-const COLUMNS: { key: SortKey | null; label: string; className?: string }[] = [
-  { key: "project", label: "Projekt" },
-  { key: "provider", label: "Anbieter" },
-  { key: "service", label: "Leistung" },
-  { key: "start", label: "Beginn" },
-  { key: null, label: "Kosten", className: "num" },
-  { key: "perMonth", label: "/ Monat", className: "num" },
-  { key: null, label: "/ Jahr", className: "num" },
-  { key: "renewal", label: "Verlängerung" },
-  { key: "deadline", label: "Kündigen bis" },
-  { key: "status", label: "Status" },
+type Row = Abo & {
+  term: Term; state: ContractState; perMonth: number | null; perYear: number | null; deadline: string | null; renewal: string | null;
+  group: { key: string; label: string };
+};
+type SortKey = "project" | "service" | "perMonth" | "deadline" | "state";
+
+const COLUMNS: { key: SortKey | null; label: string; className: string }[] = [
+  { key: "service", label: "Leistung", className: "c-service" },
+  { key: "project", label: "Projekt", className: "c-project" },
+  { key: null, label: "Kosten", className: "c-cost num" },
+  { key: "perMonth", label: "€/Mon.", className: "c-month num" },
+  { key: null, label: "€/Jahr", className: "c-year num" },
+  { key: "deadline", label: "Kündigen bis", className: "c-deadline" },
+  { key: "state", label: "Vertrag", className: "c-state" },
 ];
 
 function toRow(a: Abo, today: string): Row {
   const term = computeTerm(a, today);
   return {
-    ...a, term, perMonth: monthlyCost(a), perYear: yearlyCost(a),
+    ...a, cancelledOn: a.cancelledOn ?? null, term, state: contractState(a, today), perMonth: monthlyCost(a), perYear: yearlyCost(a),
     deadline: term.kind === "laufend" ? term.deadline : null,
     renewal: term.kind === "laufend" ? term.nextRenewal : null,
+    group: groupOf(a),
   };
 }
 
+const STATE_ORDER = { laeuft: 0, gekuendigt: 1, beendet: 2 };
 function compare(a: Row, b: Row, key: SortKey): number {
-  const x = a[key], y = b[key];
+  const x = key === "state" ? STATE_ORDER[a.state.kind] : a[key];
+  const y = key === "state" ? STATE_ORDER[b.state.kind] : b[key];
   if (x == null && y == null) return 0;
   if (x == null) return 1; // leere Werte immer ans Ende
   if (y == null) return -1;
   return typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y), "de");
 }
 
-const inDays = (n: number) => (n === 0 ? "heute" : n === 1 ? "morgen" : `in ${n} Tagen`);
+const inDays = (n: number) => (n === 0 ? "heute" : n === 1 ? "morgen" : `in ${n} T.`);
+const urgency = (d: number | null) => (d == null ? "" : d <= URGENT ? "urgent" : d <= SOON ? "warn" : "");
+
+function details(r: Row): string {
+  return [
+    r.contractNo && `Nr. ${r.contractNo}`,
+    r.start && `Beginn ${formatDate(r.start)}`,
+    r.renewal && `nächste Verlängerung ${formatDate(r.renewal)}`,
+    r.term.kind === "laufend" && `Kündigung wirksam zum ${formatDate(r.term.periodEnd)}`,
+    noticeLabel(r) && `Frist ${noticeLabel(r)}`,
+    r.cancelledOn && `gekündigt am ${formatDate(r.cancelledOn)}`,
+  ].filter(Boolean).join(" · ");
+}
+
+function Badge({ state }: { state: ContractState }) {
+  return <span className={`badge ${state.kind}`}>{state.label}</span>;
+}
+
+type Group = { key: string; label: string; rows: Row[] };
 
 export default function AdminApp({ initial, today }: { initial: Abo[]; today: string }) {
   const [items, setItems] = useState<Abo[]>(initial);
-  const [filter, setFilter] = useState({ project: "", provider: "", status: "", q: "" });
+  const [filter, setFilter] = useState({ project: "", provider: "", state: "", q: "" });
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "deadline", dir: 1 });
   const [editing, setEditing] = useState<Abo | "new" | null>(null);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const [open, setOpen] = useState<string[]>([]);
+
+  // aufgeklappte Gruppen merken (nur in diesem Browser)
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(OPEN_KEY) ?? "[]");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- einmalig nach dem Laden aus localStorage
+      if (Array.isArray(saved)) setOpen(saved.filter((k) => typeof k === "string"));
+    } catch {}
+  }, []);
+  const toggleGroup = (key: string) => setOpen((list) => {
+    const next = list.includes(key) ? list.filter((k) => k !== key) : [...list, key];
+    try { localStorage.setItem(OPEN_KEY, JSON.stringify(next)); } catch {}
+    return next;
+  });
 
   const rows = useMemo(() => items.map((a) => toRow(a, today)), [items, today]);
   const projects = useMemo(() => [...new Set(rows.map((r) => r.project))].sort((a, b) => a.localeCompare(b, "de")), [rows]);
@@ -66,18 +106,34 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
     return rows
       .filter((r) => (!filter.project || r.project === filter.project)
         && (!filter.provider || r.provider === filter.provider)
-        && (!filter.status || r.status === filter.status)
+        && (!filter.state || r.state.kind === filter.state)
         && (!q || [r.project, r.provider, r.service, r.contractNo, r.note].join(" ").toLowerCase().includes(q)))
       .sort((a, b) => compare(a, b, sort.key) * sort.dir || compare(a, b, "project") || compare(a, b, "service"));
   }, [rows, filter, sort]);
 
+  // Gruppen in der Reihenfolge ihres ersten (sortierten) Eintrags
+  const groups = useMemo(() => {
+    const map = new Map<string, Group>();
+    for (const r of visible) {
+      const g = map.get(r.group.key) ?? { key: r.group.key, label: r.group.label, rows: [] };
+      g.rows.push(r);
+      map.set(r.group.key, g);
+    }
+    return [...map.values()];
+  }, [visible]);
+
   const sum = useMemo(() => totals(items), [items]);
   const visibleSum = useMemo(() => totals(visible), [visible]);
   const filtered = visible.length !== rows.length;
+  const counts = useMemo(() => {
+    const c = { laeuft: 0, gekuendigt: 0, beendet: 0 };
+    for (const r of rows) c[r.state.kind]++;
+    return c;
+  }, [rows]);
 
   const soon = useMemo(
     () => rows
-      .filter((r) => r.deadline && daysBetween(today, r.deadline) <= SOON)
+      .filter((r) => r.state.kind === "laeuft" && r.deadline && daysBetween(today, r.deadline) <= SOON)
       .sort((a, b) => compare(a, b, "deadline")),
     [rows, today],
   );
@@ -125,6 +181,70 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
     return true;
   }
 
+  const searching = filter.q.trim() !== "";
+
+  const renderRow = (r: Row, inGroup: boolean) => {
+    const d = r.deadline ? daysBetween(today, r.deadline) : null;
+    return (
+      <tr key={r.id} onClick={() => setEditing(r)} className={`${r.state.kind !== "laeuft" ? "inactive" : ""} ${inGroup ? "child" : ""}`}>
+        <td className="c-service" title={[r.service, details(r)].filter(Boolean).join("\n")}>
+          <button type="button" className="link" onClick={(e) => { e.stopPropagation(); setEditing(r); }}>
+            {!inGroup && r.provider && <span className="muted">{r.provider} · </span>}
+            {r.service || "—"}
+          </button>
+          {r.note && <span className="note" title={r.note} aria-label={`Notiz: ${r.note}`}>ⓘ</span>}
+        </td>
+        <td className="c-project">{r.project}</td>
+        <td className="c-cost num">
+          {r.amount == null ? <span className="muted">?</span> : <>{formatMoney(r.amount, r.currency)}<span className="per">{PER[r.interval]}</span></>}
+        </td>
+        <td className="c-month num">{formatMoney(r.perMonth, r.currency)}</td>
+        <td className="c-year num">{formatMoney(r.perYear, r.currency)}</td>
+        <td className={`c-deadline ${urgency(d)} ${r.deadline ? "has-date" : ""}`}>
+          {r.deadline ? <>{formatShort(r.deadline)}{d! <= SOON && <span className="per"> {inDays(d!)}</span>}</>
+            : r.state.kind === "laeuft" ? <span className="muted">{termLabel(r.term)}</span> : <span className="muted">–</span>}
+        </td>
+        <td className="c-state"><Badge state={r.state} /></td>
+      </tr>
+    );
+  };
+
+  const renderGroup = (g: Group) => {
+    const isOpen = searching || open.includes(g.key);
+    const t = totals(g.rows);
+    const next = g.rows.filter((r) => r.deadline && r.state.kind === "laeuft").sort((a, b) => compare(a, b, "deadline"))[0];
+    const d = next?.deadline ? daysBetween(today, next.deadline) : null;
+    const c = { laeuft: 0, gekuendigt: 0, beendet: 0 };
+    for (const r of g.rows) c[r.state.kind]++;
+    const projectsInGroup = new Set(g.rows.map((r) => r.project));
+    const noun = g.label.startsWith("Domains") ? "Pakete" : "Verträge";
+    return (
+      <Fragment key={g.key}>
+        <tr className="group" onClick={() => toggleGroup(g.key)} aria-expanded={isOpen}>
+          <td className="c-service">
+            <button type="button" className="link group-toggle" onClick={(e) => { e.stopPropagation(); toggleGroup(g.key); }} aria-expanded={isOpen}>
+              <span className="caret" aria-hidden="true">{isOpen ? "▾" : "▸"}</span> {g.label}
+            </button>
+            <span className="muted"> · {g.rows.length} {noun}</span>
+          </td>
+          <td className="c-project muted">{projectsInGroup.size === 1 ? g.rows[0].project : `${projectsInGroup.size} Projekte`}</td>
+          <td className="c-cost num muted">{t.missing ? `${t.missing}× ?` : ""}</td>
+          <td className="c-month num">{t.count > t.missing ? formatSums(t.perMonth) : <span className="muted">?</span>}</td>
+          <td className="c-year num">{t.count > t.missing ? formatSums(t.perYear) : <span className="muted">?</span>}</td>
+          <td className={`c-deadline ${urgency(d)} ${next ? "has-date" : ""}`}>
+            {next ? <>{formatShort(next.deadline)}<span className="per"> {d! <= SOON ? inDays(d!) : "nächste"}</span></> : <span className="muted">–</span>}
+          </td>
+          <td className="c-state">
+            {c.laeuft > 0 && <span className="badge laeuft">{c.laeuft} läuft</span>}
+            {c.gekuendigt > 0 && <span className="badge gekuendigt">{c.gekuendigt} gekündigt</span>}
+            {c.beendet > 0 && <span className="badge beendet">{c.beendet} beendet</span>}
+          </td>
+        </tr>
+        {isOpen && g.rows.map((r) => renderRow(r, true))}
+      </Fragment>
+    );
+  };
+
   return (
     <div className="admin">
       <header className="admin-head">
@@ -145,10 +265,10 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
       {info && <p className="admin-info" role="status">{info}</p>}
 
       <section className="tiles" aria-label="Summen">
-        <div><span>pro Monat</span><strong>{formatSums(sum.perMonth)}</strong></div>
-        <div><span>pro Jahr</span><strong>{formatSums(sum.perYear)}</strong></div>
-        <div><span>aktive Verträge</span><strong>{sum.count}</strong></div>
-        <div className={sum.missing ? "warn" : ""}><span>ohne Kostenangabe</span><strong>{sum.missing}</strong></div>
+        <div><span>pro Monat (laufend)</span><strong>{formatSums(sum.perMonth)}</strong></div>
+        <div><span>pro Jahr (laufend)</span><strong>{formatSums(sum.perYear)}</strong></div>
+        <div><span>Verträge</span><strong>{counts.laeuft} <small className="inline">laufen</small>{counts.gekuendigt > 0 && <> · {counts.gekuendigt} <small className="inline">gekündigt</small></>}</strong></div>
+        {sum.missing > 0 && <div className="warn"><span>ohne Kostenangabe</span><strong>{sum.missing}</strong></div>}
       </section>
 
       <section className="soon" aria-label="Kündigungsfristen">
@@ -162,8 +282,8 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
               return (
                 <li key={r.id} className={d <= URGENT ? "urgent" : "warn"}>
                   <button type="button" className="link" onClick={() => setEditing(r)}>
-                    <strong>{formatDate(r.deadline)}</strong> ({inDays(d)}) · {r.service || r.provider} · {r.provider} · {r.project}
-                    {r.term.kind === "laufend" && <span className="muted"> – sonst Verlängerung am {formatDate(r.term.nextRenewal)}</span>}
+                    <strong>{formatShort(r.deadline)}</strong> ({inDays(d)}) · {r.service || r.provider} · {r.project}
+                    {r.renewal && <span className="muted"> – sonst Verlängerung am {formatShort(r.renewal)}</span>}
                   </button>
                 </li>
               );
@@ -173,6 +293,12 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
       </section>
 
       <section className="filters" aria-label="Filter">
+        <select value={filter.state} onChange={(e) => setFilter({ ...filter, state: e.target.value })} aria-label="Vertrag">
+          <option value="">alle Verträge</option>
+          <option value="laeuft">nur laufende</option>
+          <option value="gekuendigt">nur gekündigte</option>
+          <option value="beendet">nur beendete</option>
+        </select>
         <select value={filter.project} onChange={(e) => setFilter({ ...filter, project: e.target.value })} aria-label="Projekt">
           <option value="">alle Projekte</option>
           {projects.map((p) => <option key={p}>{p}</option>)}
@@ -181,21 +307,17 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
           <option value="">alle Anbieter</option>
           {providers.map((p) => <option key={p}>{p}</option>)}
         </select>
-        <select value={filter.status} onChange={(e) => setFilter({ ...filter, status: e.target.value })} aria-label="Status">
-          <option value="">jeder Status</option>
-          {Object.entries(STATUSES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
         <select className="mobile-sort" value={`${sort.key}:${sort.dir}`} aria-label="Sortierung"
           onChange={(e) => { const [key, dir] = e.target.value.split(":"); setSort({ key: key as SortKey, dir: dir === "-1" ? -1 : 1 }); }}>
           {COLUMNS.filter((c) => c.key).flatMap((c) => [
-            <option key={`${c.key}:1`} value={`${c.key}:1`}>{c.label.replace("/ ", "pro ")} ↑</option>,
-            <option key={`${c.key}:-1`} value={`${c.key}:-1`}>{c.label.replace("/ ", "pro ")} ↓</option>,
+            <option key={`${c.key}:1`} value={`${c.key}:1`}>{c.label} ↑</option>,
+            <option key={`${c.key}:-1`} value={`${c.key}:-1`}>{c.label} ↓</option>,
           ])}
         </select>
         <input type="search" placeholder="suchen …" value={filter.q} onChange={(e) => setFilter({ ...filter, q: e.target.value })} aria-label="Suche" />
         {filtered && (
           <span className="muted">
-            {visible.length} von {rows.length} · {formatSums(visibleSum.perMonth)} / Monat · {formatSums(visibleSum.perYear)} / Jahr
+            {visible.length} von {rows.length} · {formatSums(visibleSum.perMonth)}/Mon. · {formatSums(visibleSum.perYear)}/Jahr
           </span>
         )}
       </section>
@@ -216,36 +338,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
             </tr>
           </thead>
           <tbody>
-            {visible.map((r) => {
-              const d = r.deadline ? daysBetween(today, r.deadline) : null;
-              return (
-                <tr key={r.id} onClick={() => setEditing(r)} className={r.status !== "aktiv" ? "inactive" : ""}>
-                  <td data-label="Projekt"><span>{r.project}</span></td>
-                  <td data-label="Anbieter"><span>{r.provider}</span></td>
-                  <td data-label="Leistung" className="service"><span>
-                    <button type="button" className="link" onClick={(e) => { e.stopPropagation(); setEditing(r); }}>{r.service || "—"}</button>
-                    {r.contractNo && <small>Nr. {r.contractNo}</small>}
-                  </span></td>
-                  <td data-label="Beginn"><span>{formatDate(r.start) || <span className="muted">?</span>}</span></td>
-                  <td data-label="Kosten" className="num"><span>
-                    {r.amount == null ? <span className="muted">?</span> : <>{formatMoney(r.amount, r.currency)} <small>{INTERVALS[r.interval].label}</small></>}
-                  </span></td>
-                  <td data-label="/ Monat" className="num"><span>{formatMoney(r.perMonth, r.currency)}</span></td>
-                  <td data-label="/ Jahr" className="num"><span>{formatMoney(r.perYear, r.currency)}</span></td>
-                  <td data-label="Verlängerung"><span>{formatDate(r.renewal)}</span></td>
-                  <td data-label="Kündigen bis" className={d == null ? "" : d <= URGENT ? "urgent" : d <= SOON ? "warn" : ""}><span>
-                    {r.deadline ? (
-                      <>{formatDate(r.deadline)}<small>{d! <= SOON ? inDays(d!) : `zum ${formatDate(r.term.kind === "laufend" ? r.term.periodEnd : null)}`}</small></>
-                    ) : r.status !== "aktiv" ? (
-                      r.endDate ? <span className="muted">endet {formatDate(r.endDate)}</span> : ""
-                    ) : (
-                      <span className="muted">{termLabel(r.term)}</span>
-                    )}
-                  </span></td>
-                  <td data-label="Status"><span><span className={`status ${r.status}`}>{STATUSES[r.status]}</span></span></td>
-                </tr>
-              );
-            })}
+            {groups.map((g) => (g.rows.length > 1 ? renderGroup(g) : renderRow(g.rows[0], false)))}
             {visible.length === 0 && (
               <tr><td colSpan={COLUMNS.length} className="muted">Keine Einträge.</td></tr>
             )}
@@ -254,7 +347,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
       </div>
 
       <section className="per-project" aria-label="Summen pro Projekt">
-        <h2>{"// "}pro Projekt (aktive Verträge)</h2>
+        <h2>{"// "}pro Projekt (laufende Verträge)</h2>
         <div className="table-wrap">
           <table>
             <thead><tr><th>Projekt</th><th className="num">/ Monat</th><th className="num">/ Jahr</th><th className="num">Verträge</th></tr></thead>
@@ -264,7 +357,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
                   <td><button type="button" className="link" onClick={() => setFilter({ ...filter, project })}>{project}</button></td>
                   <td className="num">{t.count > t.missing ? formatSums(t.perMonth) : <span className="muted">?</span>}</td>
                   <td className="num">{t.count > t.missing ? formatSums(t.perYear) : <span className="muted">?</span>}</td>
-                  <td className="num">{t.count}{total > t.count ? <small> (+{total - t.count} inaktiv)</small> : ""}{t.missing ? <small className="warn"> · {t.missing} ohne Kosten</small> : ""}</td>
+                  <td className="num">{t.count}{total > t.count ? <small> (+{total - t.count} gekündigt/beendet)</small> : ""}{t.missing ? <small className="warn"> · {t.missing} ohne Kosten</small> : ""}</td>
                 </tr>
               ))}
             </tbody>
@@ -289,14 +382,15 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
 
 // ---------- Formular ----------
 
-type Form = Record<keyof Omit<Abo, "id">, string>;
+type Form = Record<Exclude<keyof Abo, "id">, string>;
 
 const toForm = (a: Abo | null): Form => ({
   project: a?.project ?? "", provider: a?.provider ?? "", service: a?.service ?? "", contractNo: a?.contractNo ?? "",
   start: a?.start ?? "", amount: a?.amount == null ? "" : String(a.amount).replace(".", ","), currency: a?.currency ?? "EUR",
   interval: a?.interval ?? "monat", minTermMonths: a?.minTermMonths == null ? "" : String(a.minTermMonths),
   renewalMonths: a?.renewalMonths == null ? "" : String(a.renewalMonths), noticeValue: a?.noticeValue == null ? "" : String(a.noticeValue),
-  noticeUnit: a?.noticeUnit ?? "monate", status: a?.status ?? "aktiv", endDate: a?.endDate ?? "", note: a?.note ?? "",
+  noticeUnit: a?.noticeUnit ?? "monate", status: a?.status ?? "aktiv", endDate: a?.endDate ?? "", cancelledOn: a?.cancelledOn ?? "",
+  note: a?.note ?? "",
 });
 
 const numOrNull = (s: string) => {
@@ -309,7 +403,7 @@ function fromForm(f: Form, id: string): Abo {
     id, project: f.project.trim() || "allgemein", provider: f.provider.trim(), service: f.service.trim(), contractNo: f.contractNo.trim(),
     start: f.start || null, amount: numOrNull(f.amount), currency: f.currency, interval: f.interval as Abo["interval"],
     minTermMonths: numOrNull(f.minTermMonths), renewalMonths: numOrNull(f.renewalMonths), noticeValue: numOrNull(f.noticeValue),
-    noticeUnit: f.noticeUnit as Abo["noticeUnit"], status: f.status as Abo["status"], endDate: f.endDate || null, note: f.note.trim(),
+    noticeUnit: f.noticeUnit as Abo["noticeUnit"], status: f.status as Abo["status"], endDate: f.endDate || null, cancelledOn: f.cancelledOn || null, note: f.note.trim(),
   };
 }
 
@@ -361,7 +455,12 @@ function Editor({ abo, projects, providers, today, onClose, onSave, onDelete }: 
           <label>Status
             <select value={f.status} onChange={set("status")}>{Object.entries(STATUSES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
           </label>
-          {f.status !== "aktiv" && <label>Endet am<input type="date" value={f.endDate} onChange={set("endDate")} /></label>}
+          {f.status !== "aktiv" && <label>Gekündigt am<input type="date" value={f.cancelledOn} onChange={set("cancelledOn")} /></label>}
+          {f.status !== "aktiv" && (
+            <label>Endet am <span className="hint">(leer = berechnet)</span>
+              <input type="date" value={f.endDate} onChange={set("endDate")} />
+            </label>
+          )}
           <label className="wide">Notiz<textarea rows={2} value={f.note} onChange={set("note")} /></label>
         </div>
         <datalist id="dl-projects">{projects.map((p) => <option key={p} value={p} />)}</datalist>
@@ -381,7 +480,12 @@ function Editor({ abo, projects, providers, today, onClose, onSave, onDelete }: 
             <>Jederzeit kündbar{noticeLabel(preview) && preview.noticeValue ? ` (Frist ${noticeLabel(preview)})` : ""}.</>
           ) : term.kind === "unbekannt" ? (
             <span className="muted">Kündigungsdatum: {term.reason}.</span>
-          ) : null}
+          ) : (
+            <>Vertrag: <strong>{contractState(preview, today).label}</strong>
+              {!preview.endDate && contractEnd(preview) && <span className="muted"> (Ende berechnet aus „gekündigt am“)</span>}
+              {preview.status === "gekuendigt" && !contractEnd(preview) && <span className="warn"> – „gekündigt am“ oder „Endet am“ eintragen</span>}
+            </>
+          )}
         </p>
 
         <div className="editor-actions">

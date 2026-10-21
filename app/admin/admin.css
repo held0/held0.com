@@ -55,19 +55,34 @@ main:has(.admin) { width: 100%; max-width: 1280px; }
 
 .table-wrap { overflow-x: auto; }
 .admin table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-.admin th, .admin td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
-.admin th { color: var(--muted); font-weight: 400; white-space: nowrap; }
+.admin th, .admin td { text-align: left; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.admin th { color: var(--muted); font-weight: 400; white-space: nowrap; font-size: 0.75rem; }
 .admin th button { border: 0; padding: 0; color: inherit; }
 .admin th button:hover { color: var(--fg); }
 .admin .num { text-align: right; white-space: nowrap; }
+.admin small.inline { display: inline; font-size: 0.75rem; font-weight: 400; }
+
+/* Übersichtstabelle: eine Zeile pro Vertrag, lange Texte abgeschnitten (voller Text im Tooltip/Dialog) */
+.abos { font-size: 0.8rem; }
 .abos tbody tr { cursor: pointer; }
 .abos tbody tr:hover { background: var(--surface); }
-.abos tr.inactive { opacity: 0.55; }
-.abos td.service { min-width: 14rem; }
-.status { white-space: nowrap; }
-.status.aktiv { color: var(--accent); }
-.status.gekuendigt { color: var(--warn); }
-.status.beendet { color: var(--muted); }
+.abos tr.inactive > td:not(.c-state) { opacity: 0.55; }
+.abos td { white-space: nowrap; }
+.abos td.c-service { max-width: 26rem; overflow: hidden; text-overflow: ellipsis; }
+.abos td.c-service button.link { display: inline; white-space: nowrap; }
+.abos td.c-project { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; }
+.abos .per { color: var(--muted); font-size: 0.7rem; margin-left: 0.15rem; }
+.abos .note { color: var(--muted); margin-left: 0.4rem; cursor: help; }
+.abos tr.group { background: var(--surface); }
+.abos tr.group td { border-bottom-color: #2a4a39; }
+.abos tr.group .group-toggle { color: var(--fg); font-weight: 600; }
+.abos .caret { display: inline-block; width: 0.9rem; color: var(--accent); }
+.abos tr.child td.c-service { padding-left: 1.6rem; }
+.badge { display: inline-block; font-size: 0.7rem; padding: 0.05rem 0.4rem; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+.badge + .badge { margin-left: 0.25rem; }
+.badge.laeuft { color: var(--accent); border-color: #2f6b4b; }
+.badge.gekuendigt { color: var(--bg); background: var(--warn); border-color: var(--warn); font-weight: 600; }
+.badge.beendet { color: var(--muted); border-color: var(--line); }
 
 .mobile-sort { display: none; }
 .admin-actions form { margin: 0; }
@@ -99,19 +114,30 @@ main:has(.admin) { width: 100%; max-width: 1280px; }
 .editor-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .editor-actions .spacer { flex: 1; }
 
-/* Handy: Tabelle als Karten */
+.editor .hint { font-size: 0.7rem; }
+
+/* Handy: knappe Karten (Leistung + Vertrag oben, darunter Projekt · Kosten · Frist) */
 @media (max-width: 760px) {
   body:has(.admin) { padding: 20px 14px; }
   .abos thead { display: none; }
-  .abos, .abos tbody, .abos tr, .abos td { display: block; width: 100%; }
-  .abos tr { border: 1px solid var(--line); border-radius: 8px; margin-bottom: 0.6rem; padding: 0.3rem 0; }
-  .abos td { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; border: 0; padding: 0.25rem 0.8rem; }
-  .abos td::before { content: attr(data-label); color: var(--muted); flex: none; }
-  .abos td > span { text-align: right; min-width: 0; }
-  .abos td:has(> span:empty) { display: none; }
-  .abos td.service { min-width: 0; }
-  .abos td small { display: inline; margin-left: 0.4rem; }
-  .abos td.service small { display: block; margin: 0; }
-  .abos td.service button.link { text-align: right; }
+  .abos, .abos tbody { display: block; width: 100%; }
+  .abos tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 0.4rem; padding: 0.45rem 0.7rem; }
+  .abos td { display: block; border: 0; padding: 0; max-width: none; }
+  .abos td.c-service { flex: 1 1 60%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .abos td.c-state { flex: none; margin-left: auto; }
+  .abos td.c-project, .abos td.c-cost, .abos td.c-deadline { order: 2; font-size: 0.75rem; text-align: left; }
+  .abos tr::before { content: ""; flex-basis: 100%; height: 0; order: 1; } /* Zeilenumbruch vor Projekt/Kosten/Frist */
+  .abos td.c-project { color: var(--muted); }
+  .abos td.c-deadline:not(.has-date) { display: none; }
+  .abos td.c-deadline::before { content: "bis "; color: var(--muted); }
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .tiles strong { font-size: 1rem; }
+  .tiles div { padding: 0.6rem 0.7rem; }
+  .abos td.c-month, .abos td.c-year { display: none; }
+  .abos tr.group td.c-month { display: block; order: 2; font-size: 0.75rem; }
+  .abos tr.group td.c-month::after { content: "/Mon."; color: var(--muted); font-size: 0.7rem; }
+  .abos tr.group td.c-cost { display: none; }
+  .abos tr.child { margin-left: 0.8rem; }
+  .abos tr.child td.c-service { padding-left: 0; }
   .mobile-sort { display: block; }
 }

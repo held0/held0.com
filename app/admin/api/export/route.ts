@@ -1,7 +1,7 @@
 import { adminGuard } from "../../../../lib/admin/auth";
 import { listAbos } from "../../../../lib/admin/store";
 import {
-  INTERVALS, STATUSES, computeTerm, monthlyCost, noticeLabel, termLabel, todayBerlin, formatDate, yearlyCost,
+  INTERVALS, STATUSES, computeTerm, contractEnd, contractState, monthlyCost, noticeLabel, termLabel, todayBerlin, formatDate, yearlyCost,
 } from "../../../../lib/admin/calc";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   const header = [
     "Projekt", "Anbieter", "Leistung", "Vertragsnr.", "Beginn", "Betrag", "Währung", "Intervall", "pro Monat", "pro Jahr",
     "Mindestlaufzeit (Monate)", "Verlängerung (Monate)", "Kündigungsfrist", "Nächste Verlängerung", "Spätestens kündigen bis",
-    "Wirksam zum", "Status", "Endet am", "Hinweis", "Notiz",
+    "Wirksam zum", "Status", "Vertrag", "Gekündigt am", "Endet am", "Hinweis", "Notiz",
   ];
   const rows = (await listAbos()).map((a) => {
     const t = computeTerm(a, today);
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       t.kind === "laufend" ? formatDate(t.nextRenewal) : "",
       t.kind === "laufend" ? formatDate(t.deadline) : t.kind === "auslaufend" ? formatDate(t.deadline) : "",
       t.kind === "laufend" ? formatDate(t.periodEnd) : t.kind === "auslaufend" ? formatDate(t.end) : "",
-      STATUSES[a.status], formatDate(a.endDate), termLabel(t), a.note,
+      STATUSES[a.status], contractState(a, today).label, formatDate(a.cancelledOn), formatDate(contractEnd(a)), termLabel(t), a.note,
     ].map(cell).join(";");
   });
   const csv = "\uFEFF" + [header.join(";"), ...rows].join("\r\n") + "\r\n";

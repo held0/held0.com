@@ -141,5 +141,18 @@
       "www.myveryown.app"
     ],
     "liveUrl": "https://myveryown.app/"
+  },
+  "dev.nilumio.com": {
+    "name": "nilumio",
+    "type": "image",
+    "devService": "nilumio-dev",
+    "liveService": "nilumio-web",
+    "port": 80,
+    "healthPath": "/up",
+    "hosts": [
+      "nilumio.com",
+      "www.nilumio.com"
+    ],
+    "liveUrl": "https://nilumio.com/"
   }
 }

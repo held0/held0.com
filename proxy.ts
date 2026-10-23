@@ -65,13 +65,23 @@ async function admin(request: NextRequest): Promise<NextResponse> {
 // Auf dev ohne dev-Passwort erreichbar: gebaute Dateien (Hash-Namen, keine Daten) – die braucht die Admin-Anmeldeseite.
 const devPublic = (pathname: string) => pathname.startsWith("/_next/static/") || pathname === "/icon.svg" || pathname === "/favicon.ico";
 
+async function devCookie(a: string): Promise<string> {
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("dev-cookie:" + a));
+  return Array.from(new Uint8Array(hash), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (isAdminPath(pathname)) return admin(request);
   if (!auth) return route(request, false);
   if (devPublic(pathname)) return NextResponse.next();
 
-  if ((request.headers.get("authorization") ?? "") !== `Basic ${btoa(auth)}`) {
+  // Einmal richtig eingegeben → Cookie ws_dev (180 Tage), damit Browser, die die Basic-Daten vergessen
+  // (v. a. Safari/iOS), nicht ständig neu fragen. Gleicher Wert auf allen dev-Seiten: sha256("dev-cookie:" + Zugang).
+  const cookie = await devCookie(auth);
+  const basicOk = (request.headers.get("authorization") ?? "") === `Basic ${btoa(auth)}`;
+  const cookieOk = request.cookies.get("ws_dev")?.value === cookie;
+  if (!basicOk && !cookieOk) {
     return new NextResponse("Passwort erforderlich", {
       status: 401,
       headers: { "WWW-Authenticate": 'Basic realm="held0 dev"', "X-Robots-Tag": "noindex, nofollow" },
@@ -79,6 +89,7 @@ export default async function proxy(request: NextRequest) {
   }
   const res = route(request, true);
   res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  if (!cookieOk) res.cookies.set("ws_dev", cookie, { path: "/", maxAge: 180 * 86400, httpOnly: true, secure: true, sameSite: "lax" });
   return res;
 }
 

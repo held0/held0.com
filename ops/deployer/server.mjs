@@ -23,13 +23,17 @@ let busy = false;
 const sh = async (cmd, args) => (await run(cmd, args, { maxBuffer: 1 << 22 })).stdout.trim();
 const docker = (...args) => sh("docker", args);
 
-function authorized(req) {
+// Gemeinsames dev-Cookie ws_dev = sha256("dev-cookie:" + Zugang): einmal angemeldet, fragen Browser, die die
+// Basic-Daten vergessen (v. a. Safari/iOS), nicht neu. Alle dev-Seiten prüfen und setzen es; hier ebenso –
+// der Button lädt auf jeder dev-Seite, setzt das Cookie also auch dort, wo die Seite selbst es nicht kann.
+function authorized(req, res) {
   const auth = fs.readFileSync(AUTH_FILE, "utf8").trim();
-  if (req.headers.authorization === "Basic " + Buffer.from(auth).toString("base64")) return true;
-  // dev-Seiten setzen nach der ersten Anmeldung das Cookie ws_dev (sha256 von "dev-cookie:" + Zugang),
-  // damit Browser, die die Basic-Daten vergessen (v. a. Safari/iOS), nicht neu fragen – hier ebenso gültig
+  const value = createHash("sha256").update("dev-cookie:" + auth).digest("hex");
   const cookie = String(req.headers.cookie || "").split(";").map((s) => s.trim()).find((s) => s.startsWith("ws_dev="));
-  return !!cookie && cookie.slice(7) === createHash("sha256").update("dev-cookie:" + auth).digest("hex");
+  if (cookie && cookie.slice(7) === value) return true;
+  if (req.headers.authorization !== "Basic " + Buffer.from(auth).toString("base64")) return false;
+  res.setHeader("Set-Cookie", `ws_dev=${value}; Path=/; Max-Age=${180 * 86400}; HttpOnly; Secure; SameSite=Lax`);
+  return true;
 }
 
 function readState(name, stage) {
@@ -162,7 +166,7 @@ http.createServer(async (req, res) => {
   const path = req.url.split("?")[0];
   if (path === "/__deploy/up") return send(res, 200, "OK", "text/plain");
   if (!p) return send(res, 404, { error: "unbekannte dev-Seite" });
-  if (!authorized(req)) {
+  if (!authorized(req, res)) {
     res.writeHead(401, { "WWW-Authenticate": 'Basic realm="dev"' });
     return res.end();
   }

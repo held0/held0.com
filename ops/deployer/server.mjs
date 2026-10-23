@@ -10,6 +10,7 @@ import http from "node:http";
 import fs from "node:fs";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { createHash } from "node:crypto";
 
 const run = promisify(execFile);
 const PROJECTS = JSON.parse(fs.readFileSync(new URL("./projects.json", import.meta.url)));
@@ -23,8 +24,12 @@ const sh = async (cmd, args) => (await run(cmd, args, { maxBuffer: 1 << 22 })).s
 const docker = (...args) => sh("docker", args);
 
 function authorized(req) {
-  const expected = "Basic " + Buffer.from(fs.readFileSync(AUTH_FILE, "utf8").trim()).toString("base64");
-  return req.headers.authorization === expected;
+  const auth = fs.readFileSync(AUTH_FILE, "utf8").trim();
+  if (req.headers.authorization === "Basic " + Buffer.from(auth).toString("base64")) return true;
+  // dev-Seiten setzen nach der ersten Anmeldung das Cookie ws_dev (sha256 von "dev-cookie:" + Zugang),
+  // damit Browser, die die Basic-Daten vergessen (v. a. Safari/iOS), nicht neu fragen – hier ebenso gültig
+  const cookie = String(req.headers.cookie || "").split(";").map((s) => s.trim()).find((s) => s.startsWith("ws_dev="));
+  return !!cookie && cookie.slice(7) === createHash("sha256").update("dev-cookie:" + auth).digest("hex");
 }
 
 function readState(name, stage) {

@@ -37,6 +37,7 @@ export type Abo = {
   status: Status;
   endDate: string | null; // bei „gekündigt“/„beendet“: Vertragsende (leer = aus „gekündigt am“ berechnet)
   cancelledOn?: string | null; // Datum der Kündigung (optional; ältere Datensätze haben das Feld nicht)
+  withdrawUntil?: string | null; // letzter Tag zum Widerrufen (z. B. Strato 30-Tage-Geld-zurück), Watchdog erinnert 7/3/1/0 Tage vorher
   note: string;
 };
 
@@ -256,6 +257,7 @@ export function sanitizeAbo(input: Record<string, unknown>, id: string): Abo {
     status,
     endDate: isDate(input.endDate) ? input.endDate : null,
     cancelledOn: isDate(input.cancelledOn) ? input.cancelledOn : null,
+    withdrawUntil: isDate(input.withdrawUntil) ? input.withdrawUntil : null,
     note: str(input.note, 2000),
   };
 }

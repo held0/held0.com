@@ -59,7 +59,7 @@ const eur = (value: number | null, r: Row) => formatEUR(value, r.currency !== "E
 const sumText = (t: Totals, key: "perMonth" | "perYear") => formatEUR(t[key], t.converted);
 
 /** Angaben für die aufgeklappte Detailzeile (nur befüllte). */
-function details(r: Row): [string, string][] {
+function details(r: Row, today: string): [string, string][] {
   const list: [string, string | false | null | undefined][] = [
     ["Leistung", [r.provider, r.service].filter(Boolean).join(" · ")],
     ["Vertragsnr.", r.contractNo],
@@ -69,6 +69,7 @@ function details(r: Row): [string, string][] {
     ["Laufzeit", termLabel(r.term)],
     ["Frist", noticeLabel(r)],
     ["gekündigt am", r.cancelledOn && formatDate(r.cancelledOn)],
+    ["Widerruf möglich bis", r.withdrawUntil && r.withdrawUntil >= today && formatDate(r.withdrawUntil)],
     ["Notiz", r.note],
   ];
   return list.filter((x): x is [string, string] => !!x[1]);
@@ -193,7 +194,7 @@ export default function AdminApp({ initial, today }: { initial: Abo[]; today: st
         <tr className={`detail ${inGroup ? "child" : ""}`}>
           <td colSpan={COLUMNS.length}>
             <dl>
-              {details(r).map(([k, v]) => <div key={k} className={k === "Notiz" || k === "Leistung" ? "wide" : ""}><dt>{k}</dt><dd>{v}</dd></div>)}
+              {details(r, today).map(([k, v]) => <div key={k} className={k === "Notiz" || k === "Leistung" ? "wide" : ""}><dt>{k}</dt><dd>{v}</dd></div>)}
             </dl>
           </td>
         </tr>

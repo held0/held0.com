@@ -154,5 +154,18 @@
       "www.nilumio.com"
     ],
     "liveUrl": "https://nilumio.com/"
+  },
+  "dev.mayquit.com": {
+    "name": "mayquit",
+    "type": "image",
+    "devService": "mayquit-dev",
+    "liveService": "mayquit-web",
+    "port": 80,
+    "healthPath": "/up",
+    "hosts": [
+      "mayquit.com",
+      "www.mayquit.com"
+    ],
+    "liveUrl": "https://mayquit.com/"
   }
 }

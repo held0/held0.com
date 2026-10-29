@@ -64,7 +64,8 @@ S "docker run --rm --network kamal curlimages/curl -sf -o /dev/null http://$NEW:
 echo "→ Proxy umschalten"
 S "docker exec kamal-proxy kamal-proxy deploy $SERVICE --target $NEW:$PORT $HOSTS --tls --health-check-path /up"
 
-OLD=$(for c in $OLD; do [ "$c" != "$NEW" ] && echo -n "$c "; done; true)
+# nur noch vorhandene alte Container (beim erneuten Deploy desselben Stands ist der gleichnamige schon ersetzt)
+OLD=$(for c in $OLD; do [ "$c" != "$NEW" ] && S "docker inspect -f . $c" >/dev/null 2>&1 && echo -n "$c "; done; true)
 if [ -n "$OLD" ]; then
   echo "→ Alten Container stoppen: $OLD(Rollback: docker start <id> + Proxy zurück)"
   S "docker stop $OLD" >/dev/null

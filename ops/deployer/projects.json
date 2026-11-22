@@ -55,6 +55,22 @@
     ],
     "liveUrl": "https://checkfirma.de/"
   },
+  "dev.omnifile.io": {
+    "name": "watchsoon",
+    "type": "files",
+    "devDir": "/home/deploy/moviegeeks-dev/app",
+    "liveDir": "/home/deploy/moviegeeks/app",
+    "exclude": [
+      "data"
+    ],
+    "after": [
+      "docker",
+      "restart",
+      "moviegeeks"
+    ],
+    "healthUrl": "http://moviegeeks:3210/up",
+    "liveUrl": "https://omnifile.io/"
+  },
   "dev.watchsoon.held0.com": {
     "name": "watchsoon",
     "type": "files",
@@ -69,7 +85,7 @@
       "moviegeeks"
     ],
     "healthUrl": "http://moviegeeks:3210/up",
-    "liveUrl": "https://watchsoon.held0.com/"
+    "liveUrl": "https://omnifile.io/"
   },
   "dev.vokalreim.de": {
     "name": "vokalreim",

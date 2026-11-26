@@ -1,6 +1,7 @@
 // Nur Projekte, die live erreichbar sind – chronologisch, neuestes oben.
 // descriptionEn: nur für /llms.txt und JSON-LD (britisches Englisch), die Seite selbst ist deutsch.
 export const projects = [
+  { name: "omnifile.io", href: "https://omnifile.io", description: "Filme und Serien, die du sehen willst – mit allen Bewertungen auf einen Blick und Tipps von Freunden", descriptionEn: "Films and series you want to watch – all ratings at a glance and tips from friends" },
   { name: "vokalreim.de", href: "https://vokalreim.de", description: "Findet Vokalreime und mehrsilbige Reime für Songtexte, Rap und Gedichte", descriptionEn: "Finds vowel rhymes and multi-syllable rhymes for German lyrics, rap and poetry" },
   { name: "cinenow.app", href: "https://cinenow.app", description: "Kinoprogramm in deiner Nähe", descriptionEn: "Cinema listings near you" },
   { name: "checkfirma.de", href: "https://checkfirma.de", description: "Prüft, ob ein Firmenname noch frei ist", descriptionEn: "Checks whether a German company name is still available" },
